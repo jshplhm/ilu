@@ -1,21 +1,31 @@
 {
   "2026": [
-    "example.jpg"
+    "IMG_0104.jpeg",
+    "IMG_2238.jpeg",
+    "IMG_3834.jpeg",
+    "IMG_4062.jpeg",
+    "IMG_4304.jpeg",
+    "IMG_6634.jpeg",
+    "IMG_7428.jpeg",
+    "IMG_7998.jpeg",
+    "IMG_8236.jpeg",
+    "IMG_8300.jpeg",
+    "IMG_8581.jpeg",
+    "IMG_8947.jpeg",
+    "IMG_9078.jpeg",
+    "IMG_9189.jpeg",
+    "IMG_9295.jpeg",
+    "IMG_9297.jpeg",
+    "IMG_9298.jpeg",
+    "IMG_9368.jpeg",
+    "IMG_9440.jpeg",
+    "IMG_9568.jpeg",
+    "IMG_9633.jpeg",
+    "IMG_9656.jpeg",
+    "IMG_9980.jpeg"
   ],
-  "2025": [
-    "example.jpg"
-  ],
-  "2024": [
-    "photo1.jpg",
-    "photo2.jpg",
-    "photo3.jpg"
-  ],
-  "2023": [
-    "photo1.jpg",
-    "photo2.jpg"
-  ],
-  "2022": [
-    "photo1.jpg",
-    "photo2.jpg"
-  ]
+  "2025": [],
+  "2024": [],
+  "2023": [],
+  "2022": []
 }
