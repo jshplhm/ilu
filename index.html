@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ilü</title>
+
+  <!-- PWA / iPhone home screen support (for later) -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="ilü" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,700;0,9..40,800;0,9..40,900&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ── Navigation ── -->
+  <nav>
+    <div class="logo">ilü</div>
+    <div class="year-nav" id="yearNav">
+      <a href="#" data-year="2026">2026</a>
+      <a href="#" data-year="2025">2025</a>
+      <a href="#" data-year="2024">2024</a>
+      <a href="#" data-year="2023">2023</a>
+      <a href="#" data-year="2022">2022</a>
+    </div>
+  </nav>
+
+  <!-- ── Header message ── -->
+  <header>
+    <p class="message">to the greatest mom, wife, and human this world has ever known. we love you so much</p>
+    <p class="signature">xo, tate &amp; daddy</p>
+  </header>
+
+  <!-- ── Photo gallery ── -->
+  <main>
+    <div class="gallery" id="gallery">
+      <div class="gallery-loading" id="galleryLoading">loading photos...</div>
+    </div>
+  </main>
+
+  <!-- ── Lightbox ── -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true">
+    <button class="lb-close" id="lbClose" aria-label="Close">×</button>
+    <button class="lb-prev"  id="lbPrev"  aria-label="Previous">&#8249;</button>
+    <button class="lb-next"  id="lbNext"  aria-label="Next">&#8250;</button>
+    <div class="lb-img-wrap">
+      <img class="lb-img" id="lbImg" src="" alt="" />
+    </div>
+    <div class="lb-counter" id="lbCounter"></div>
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
