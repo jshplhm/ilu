@@ -13,6 +13,7 @@
   --white: #ffffff;
   --mid: #888;
   --gap: 8px;
+  --cols: 4;
 }
 
 html { font-size: 16px; -webkit-font-smoothing: antialiased; }
@@ -34,11 +35,7 @@ nav {
   padding: 22px 40px;
 }
 
-.logo {
-  font-size: 1.4rem;
-  font-weight: 900;
-  letter-spacing: -0.03em;
-}
+.logo { font-size: 1.4rem; font-weight: 900; letter-spacing: -0.03em; }
 
 .year-nav { display: flex; gap: 20px; }
 
@@ -81,44 +78,51 @@ header {
 }
 
 /* ─────────────────────────────────────────
-   Gallery
+   Gallery — manual masonry columns
+   Col 0 = rank 1,5,9…  Col 1 = rank 2,6,10…
+   Top of every col = its highest-ranked photo
 ───────────────────────────────────────── */
 .gallery {
-  padding: 0 var(--gap) 80px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-auto-flow: row;       /* fills left-to-right, so rank 1 = top-left */
+  display: flex;
+  align-items: flex-start;
   gap: var(--gap);
-  align-items: start;        /* photos keep natural height */
+  padding: 0 var(--gap) 80px;
+  /* overflow visible so FLIP animations can cross column boundaries */
+  overflow: visible;
 }
 
-.gallery-loading {
-  grid-column: 1 / -1;
-  text-align: center;
-  color: var(--mid);
-  font-size: 0.9rem;
-  padding: 48px 0;
-  letter-spacing: 0.05em;
-}
-
-.gallery-empty {
-  grid-column: 1 / -1;
+.gallery-message {
+  flex: 1;
   text-align: center;
   color: var(--mid);
   font-size: 0.9rem;
   padding: 80px 24px;
 }
 
-/* Each photo card */
+.gallery-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  overflow: visible; /* let FLIP items escape during animation */
+  min-width: 0;
+}
+
+/* ─────────────────────────────────────────
+   Photo card
+───────────────────────────────────────── */
 .gallery-item {
-  break-inside: avoid;
-  margin-bottom: var(--gap);
   position: relative;
   overflow: hidden;
   background: #f0f0f0;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
   border-radius: 2px;
+  cursor: pointer;
+
+  /* Kill ALL browser selection/highlight behavior */
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .gallery-item img {
@@ -127,59 +131,41 @@ header {
   display: block;
   opacity: 0;
   transition: opacity 0.3s ease;
-  pointer-events: none; /* clicks go to the card, not the img */
+  pointer-events: none;
+  -webkit-user-drag: none;
+  draggable: false;
 }
 
 .gallery-item img.loaded { opacity: 1; }
 
-/* Hover: subtle lift on desktop */
+/* Hover lift — desktop only */
 @media (hover: hover) {
-  .gallery-item:hover { transform: scale(1.02); transition: transform 0.2s ease; }
+  .gallery-item {
+    transition: box-shadow 0.2s ease;
+  }
+  .gallery-item:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  }
 }
 
-/* Click pop animation */
+/* Click pop */
 @keyframes card-pop {
   0%   { transform: scale(1); }
-  35%  { transform: scale(0.94); }
+  35%  { transform: scale(0.95); }
   70%  { transform: scale(1.03); }
   100% { transform: scale(1); }
 }
 
 .gallery-item.popping {
-  animation: card-pop 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+  animation: card-pop 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+  /* pop must sit above neighbours during animation */
+  z-index: 5;
+  position: relative;
 }
 
 /* ─────────────────────────────────────────
-   Heart overlay
+   Heart badge
 ───────────────────────────────────────── */
-.heart-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-  opacity: 0;
-}
-
-/* Big heart burst that fades out */
-@keyframes heart-burst {
-  0%   { opacity: 0;   transform: scale(0.3); }
-  30%  { opacity: 1;   transform: scale(1.2); }
-  60%  { opacity: 0.8; transform: scale(1); }
-  100% { opacity: 0;   transform: scale(1.1); }
-}
-
-.heart-overlay.burst {
-  animation: heart-burst 0.5s ease forwards;
-}
-
-.heart-overlay-icon {
-  font-size: 3rem;
-  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.25));
-}
-
-/* Small persistent heart + count badge — bottom right */
 .heart-badge {
   position: absolute;
   bottom: 7px;
@@ -218,5 +204,6 @@ header {
   .year-nav { gap: 14px; }
   .year-nav a { font-size: 0.9rem; }
   header { padding: 36px 20px 52px; }
-  .gallery { grid-template-columns: repeat(2, 1fr); }
+  /* 2 columns on mobile */
+  .gallery { --cols: 2; }
 }
