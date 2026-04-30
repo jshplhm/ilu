@@ -117,7 +117,7 @@ header {
   background: #f0f0f0;
   border-radius: 2px;
   cursor: pointer;
-
+  touch-action: manipulation;  
   /* Kill ALL browser selection/highlight behavior */
   -webkit-tap-highlight-color: rgba(0,0,0,0);
   -webkit-touch-callout: none;
