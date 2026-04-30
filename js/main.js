@@ -3,7 +3,7 @@
 ───────────────────────────────────────── */
 
 // ── CONFIG ─────────────────────────────
-const FIREBASE_URL = 'https://ilu-site-default-rtdb.firebaseio.com/';
+const FIREBASE_URL = 'https://ilu-site-default-rtdb.firebaseio.com';
 const USE_FIREBASE = FIREBASE_URL !== 'YOUR_FIREBASE_URL_HERE';
 
 let photoManifest = {};
