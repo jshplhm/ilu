@@ -207,3 +207,19 @@ header {
   /* 2 columns on mobile */
   .gallery { --cols: 2; }
 }
+
+/* Remove loading text */
+.gallery-loading { display: none; }
+
+/* Photos start invisible and slightly below */
+.gallery-item {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+/* Each photo fades+slides up when its image loads */
+.gallery-item.loaded {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
