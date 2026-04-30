@@ -154,6 +154,7 @@ header {
   background: #000;
   z-index: 9999;
   overflow: hidden;
+  touch-action: none; /* prevent browser pinch-zoom inside lightbox */
 }
 
 .lightbox.open {
