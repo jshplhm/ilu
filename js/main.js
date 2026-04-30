@@ -1,31 +1,27 @@
 /* ─────────────────────────────────────────
-   ilü — main.js  (carousel lightbox)
+   ilü — main.js
 ───────────────────────────────────────── */
 
-// ── State ──────────────────────────────
 let photoManifest = {};
 let currentYear   = null;
 let currentPhotos = [];
 let currentIndex  = 0;
 
-// ── Touch state ────────────────────────
+// Touch tracking
 let touchStartX   = 0;
 let touchStartY   = 0;
 let touchCurrentX = 0;
 let isDragging    = false;
 let isAnimating   = false;
-let axisLocked    = null; // 'h' or 'v'
+let isPinching    = false;
+let axisLocked    = null;
 
-// ── DOM refs ───────────────────────────
 const gallery   = document.getElementById('gallery');
 const lightbox  = document.getElementById('lightbox');
-const lbTrack   = document.getElementById('lbTrack');
+const lbImg     = document.getElementById('lbImg');
 const lbCounter = document.getElementById('lbCounter');
-const imgPrev   = document.getElementById('lbImgPrev');
-const imgCur    = document.getElementById('lbImgCur');
-const imgNext   = document.getElementById('lbImgNext');
 
-// ── Helpers ────────────────────────────
+// ── Utilities ──────────────────────────
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -35,22 +31,20 @@ function shuffle(arr) {
   return a;
 }
 
-function photoSrc(index) {
+function src(index) {
   const i = (index + currentPhotos.length) % currentPhotos.length;
   return `photos/${currentYear}/${currentPhotos[i]}`;
 }
 
-// ── Load photos.json ───────────────────
+// ── Load manifest ──────────────────────
 async function loadManifest() {
   try {
     const res = await fetch('photos.json');
     photoManifest = await res.json();
-  } catch (e) {
-    photoManifest = {};
-  }
+  } catch(e) { photoManifest = {}; }
 }
 
-// ── Show year ──────────────────────────
+// ── Gallery ────────────────────────────
 function showYear(year) {
   currentYear = String(year);
   document.querySelectorAll('.year-nav a').forEach(a => {
@@ -60,7 +54,7 @@ function showYear(year) {
   currentPhotos = shuffle(photoManifest[currentYear] || []);
   gallery.innerHTML = '';
 
-  if (currentPhotos.length === 0) {
+  if (!currentPhotos.length) {
     gallery.innerHTML = '<p class="gallery-empty">photos coming soon ✦</p>';
     return;
   }
@@ -81,129 +75,139 @@ function showYear(year) {
   });
 }
 
-// ── Carousel track position ────────────
-// Track is 300% wide. Panel order: [prev][cur][next]
-// Resting position shows the middle panel = translateX(-100vw)
-function setTrackX(x, animate) {
-  lbTrack.style.transition = animate
-    ? 'transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-    : 'none';
-  lbTrack.style.transform = `translateX(${x}px)`;
-}
-
-function resetTrack() {
-  setTrackX(-window.innerWidth, false);
-}
-
-function loadPanels() {
-  imgPrev.src = photoSrc(currentIndex - 1);
-  imgCur.src  = photoSrc(currentIndex);
-  imgNext.src = photoSrc(currentIndex + 1);
-  lbCounter.textContent = `${currentIndex + 1} / ${currentPhotos.length}`;
-}
-
-// ── Lightbox open / close ──────────────
+// ── Lightbox ───────────────────────────
 function openLightbox(index) {
   currentIndex = index;
-  loadPanels();
-  resetTrack();
+  lbImg.style.cssText = '';   // clear any leftover animation styles
+  lbImg.src = src(currentIndex);
+  lbCounter.textContent = `${currentIndex + 1} / ${currentPhotos.length}`;
   lightbox.classList.add('open');
   document.body.style.overflow = 'hidden';
+  preload(currentIndex + 1);
+  preload(currentIndex - 1);
 }
 
 function closeLightbox() {
   lightbox.classList.remove('open');
   document.body.style.overflow = '';
+  setTimeout(() => { lbImg.src = ''; }, 300);
 }
 
-// ── Navigate ───────────────────────────
+function preload(index) {
+  const i = (index + currentPhotos.length) % currentPhotos.length;
+  new Image().src = src(i);
+}
+
+// ── Navigate with slide ─────────────────
 function navigate(dir) {
   if (isAnimating) return;
   isAnimating = true;
 
-  const targetX = -window.innerWidth + (-dir * window.innerWidth);
-  setTrackX(targetX, true);
+  const outX = dir > 0 ? '-60vw' : '60vw';
+  const inX  = dir > 0 ?  '60vw' : '-60vw';
 
-  lbTrack.addEventListener('transitionend', function onDone() {
-    lbTrack.removeEventListener('transitionend', onDone);
+  // Slide current out
+  lbImg.style.transition = 'transform 0.25s ease-in, opacity 0.25s ease-in';
+  lbImg.style.transform  = `translateX(${outX})`;
+  lbImg.style.opacity    = '0';
+
+  setTimeout(() => {
     currentIndex = (currentIndex + dir + currentPhotos.length) % currentPhotos.length;
-    loadPanels();
-    resetTrack();
-    isAnimating = false;
-  }, { once: true });
+    lbImg.src = src(currentIndex);
+    lbCounter.textContent = `${currentIndex + 1} / ${currentPhotos.length}`;
+
+    // Position new image on opposite side instantly
+    lbImg.style.transition = 'none';
+    lbImg.style.transform  = `translateX(${inX})`;
+    lbImg.style.opacity    = '0';
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      lbImg.style.transition = 'transform 0.25s ease-out, opacity 0.25s ease-out';
+      lbImg.style.transform  = 'translateX(0)';
+      lbImg.style.opacity    = '1';
+      setTimeout(() => {
+        lbImg.style.cssText = '';
+        isAnimating = false;
+        preload(currentIndex + 1);
+        preload(currentIndex - 1);
+      }, 260);
+    }));
+  }, 250);
 }
 
-// ── Touch — track follows finger ───────
-let isPinching = false;
-
+// ── Touch — image follows finger ───────
 lightbox.addEventListener('touchstart', e => {
   if (isAnimating) return;
-  // More than one finger = pinch zoom, ignore entirely
   if (e.touches.length > 1) { isPinching = true; return; }
   isPinching    = false;
+  axisLocked    = null;
+  isDragging    = false;
   touchStartX   = e.touches[0].clientX;
   touchStartY   = e.touches[0].clientY;
   touchCurrentX = touchStartX;
-  isDragging    = false;
-  axisLocked    = null;
-  setTrackX(-window.innerWidth, false);
+  lbImg.style.transition = 'none';
 }, { passive: true });
 
 lightbox.addEventListener('touchmove', e => {
-  // Always block browser zoom inside lightbox
+  if (isPinching || isAnimating) return;
   if (e.touches.length > 1) {
-    e.preventDefault();
     isPinching = true;
     isDragging = false;
-    resetTrack();
+    lbImg.style.cssText = '';
     return;
   }
-  if (isAnimating || isPinching) return;
-  // If browser viewport is zoomed in, don't swipe — let them pan
+
+  // Don't swipe if browser is zoomed in
   if (window.visualViewport && window.visualViewport.scale > 1.05) return;
-  touchCurrentX  = e.touches[0].clientX;
+
+  touchCurrentX = e.touches[0].clientX;
   const dx = touchCurrentX - touchStartX;
   const dy = e.touches[0].clientY - touchStartY;
 
-  // Determine axis on first move
   if (!axisLocked) {
-    if (Math.abs(dx) > Math.abs(dy) + 4)      axisLocked = 'h';
-    else if (Math.abs(dy) > Math.abs(dx) + 4) axisLocked = 'v';
+    if (Math.abs(dx) > Math.abs(dy) + 5)      axisLocked = 'h';
+    else if (Math.abs(dy) > Math.abs(dx) + 5) axisLocked = 'v';
     else return;
   }
 
-  if (axisLocked === 'v') return; // let page scroll
+  if (axisLocked === 'v') return;
 
   isDragging = true;
 
-  // Resistance at ends
-  const atFirst = currentIndex === 0 && dx > 0;
-  const atLast  = currentIndex === currentPhotos.length - 1 && dx < 0;
-  const x = -window.innerWidth + (atFirst || atLast ? dx * 0.15 : dx);
-  setTrackX(x, false);
-}, { passive: false });
+  // Slight resistance at first/last photo
+  const atEdge = (currentIndex === 0 && dx > 0) ||
+                 (currentIndex === currentPhotos.length - 1 && dx < 0);
+  const x = atEdge ? dx * 0.15 : dx;
+
+  lbImg.style.transform = `translateX(${x}px)`;
+  lbImg.style.opacity   = String(Math.max(0.4, 1 - Math.abs(x) / (window.innerWidth * 0.8)));
+}, { passive: true });
 
 lightbox.addEventListener('touchend', e => {
-  // Don't navigate if this was a pinch or if fingers still on screen
-  if (isPinching || e.touches.length > 0) { isDragging = false; isPinching = false; return; }
+  if (isPinching || e.touches.length > 0) {
+    isPinching = false;
+    isDragging = false;
+    return;
+  }
   if (!isDragging || isAnimating) { isDragging = false; return; }
   isDragging = false;
 
-  // Don't navigate if page is zoomed in
   if (window.visualViewport && window.visualViewport.scale > 1.05) {
-    resetTrack();
+    lbImg.style.cssText = '';
     return;
   }
 
   const dx        = touchCurrentX - touchStartX;
   const threshold = window.innerWidth * 0.2;
 
-  if (dx < -threshold)      navigate(1);   // swipe left  → next
-  else if (dx > threshold)  navigate(-1);  // swipe right → prev
+  if (dx < -threshold)     navigate(1);
+  else if (dx > threshold) navigate(-1);
   else {
     // snap back
-    setTrackX(-window.innerWidth, true);
-    lbTrack.addEventListener('transitionend', () => {}, { once: true });
+    lbImg.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+    lbImg.style.transform  = 'translateX(0)';
+    lbImg.style.opacity    = '1';
+    setTimeout(() => { lbImg.style.cssText = ''; }, 310);
   }
 }, { passive: true });
 
@@ -236,6 +240,6 @@ document.querySelectorAll('.year-nav a').forEach(a => {
 (async () => {
   await loadManifest();
   const years = ['2026', '2025', '2024', '2023', '2022'];
-  const defaultYear = years.find(y => (photoManifest[y] || []).length > 0) || '2026';
-  showYear(defaultYear);
+  const def = years.find(y => (photoManifest[y] || []).length > 0) || '2026';
+  showYear(def);
 })();
