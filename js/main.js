@@ -46,7 +46,10 @@ async function firebaseLoadAll() {
         Object.keys(data[year] || {}).forEach(k => {
           decoded[decodeKey(k)] = data[year][k];
         });
-        localSet(year, decoded);
+        // Firebase is the source of truth — always overwrite localStorage
+        const local = localGet(year);
+        const merged = { ...local, ...decoded }; // Firebase wins on conflict
+        localSet(year, merged);
       });
     }
   } catch(e) {}
