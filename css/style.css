@@ -60,9 +60,7 @@ nav {
   transition: opacity 0.2s, border-color 0.2s;
 }
 
-.year-nav a:hover {
-  opacity: 0.65;
-}
+.year-nav a:hover { opacity: 0.65; }
 
 .year-nav a.active {
   opacity: 1;
@@ -94,11 +92,11 @@ header {
 }
 
 /* ─────────────────────────────────────────
-   Gallery — CSS masonry columns
+   Gallery
 ───────────────────────────────────────── */
 .gallery {
   padding: 0 var(--gap) 80px;
-  columns: 4 200px;   /* up to 4 columns, min 200px each */
+  columns: 4 200px;
   column-gap: var(--gap);
 }
 
@@ -125,7 +123,7 @@ header {
   margin-bottom: var(--gap);
   cursor: pointer;
   overflow: hidden;
-  background: #f0f0f0; /* placeholder while loading */
+  background: #f0f0f0;
 }
 
 .gallery-item img {
@@ -136,13 +134,9 @@ header {
   opacity: 0;
 }
 
-.gallery-item img.loaded {
-  opacity: 1;
-}
+.gallery-item img.loaded { opacity: 1; }
 
-.gallery-item:hover img {
-  transform: scale(1.03);
-}
+.gallery-item:hover img { transform: scale(1.03); }
 
 /* ─────────────────────────────────────────
    Lightbox — carousel
@@ -154,20 +148,19 @@ header {
   background: #000;
   z-index: 9999;
   overflow: hidden;
-  touch-action: none; /* prevent browser pinch-zoom inside lightbox */
+  touch-action: none;
 }
 
-.lightbox.open {
-  display: block;
-}
+.lightbox.open { display: block; }
 
+/* Stage clips the track */
 .lb-stage {
   position: absolute;
   inset: 0;
   overflow: hidden;
 }
 
-/* Track is 3 panels wide, use explicit viewport height */
+/* Track is 3 panels wide */
 .lb-track {
   display: flex;
   width: 300%;
@@ -197,12 +190,12 @@ header {
   border-radius: 2px;
 }
 
-/* Lightbox buttons — must sit above the stage */
-  z-index: 10;
+/* Buttons sit above the stage */
 .lb-close,
 .lb-prev,
 .lb-next {
   position: absolute;
+  z-index: 10;
   background: none;
   border: none;
   color: rgba(255, 255, 255, 0.75);
@@ -213,9 +206,7 @@ header {
 
 .lb-close:hover,
 .lb-prev:hover,
-.lb-next:hover {
-  color: #fff;
-}
+.lb-next:hover { color: #fff; }
 
 .lb-close {
   top: 18px;
@@ -238,6 +229,7 @@ header {
 
 .lb-counter {
   position: absolute;
+  z-index: 10;
   bottom: 18px;
   left: 50%;
   transform: translateX(-50%);
@@ -257,25 +249,12 @@ header {
     flex-wrap: wrap;
   }
 
-  .year-nav {
-    gap: 14px;
-  }
+  .year-nav { gap: 14px; }
+  .year-nav a { font-size: 0.9rem; }
 
-  .year-nav a {
-    font-size: 0.9rem;
-  }
+  header { padding: 36px 20px 52px; }
 
-  header {
-    padding: 36px 20px 52px;
-  }
-
-  .gallery {
-    columns: 2;
-  }
-
-  .lb-img-wrap {
-    padding: 48px 12px;
-  }
+  .gallery { columns: 2; }
 
   .lb-prev,
   .lb-next {
