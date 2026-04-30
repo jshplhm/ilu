@@ -15,10 +15,7 @@
   --gap: 8px;
 }
 
-html {
-  font-size: 16px;
-  -webkit-font-smoothing: antialiased;
-}
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
 
 body {
   font-family: var(--font);
@@ -43,10 +40,7 @@ nav {
   letter-spacing: -0.03em;
 }
 
-.year-nav {
-  display: flex;
-  gap: 20px;
-}
+.year-nav { display: flex; gap: 20px; }
 
 .year-nav a {
   text-decoration: none;
@@ -118,6 +112,7 @@ header {
   cursor: pointer;
   overflow: hidden;
   background: #f0f0f0;
+  position: relative; /* needed for heart button overlay */
 }
 
 .gallery-item img {
@@ -128,8 +123,64 @@ header {
   opacity: 0;
 }
 
-.gallery-item img.loaded  { opacity: 1; }
-.gallery-item:hover img   { transform: scale(1.03); }
+.gallery-item img.loaded { opacity: 1; }
+.gallery-item:hover img  { transform: scale(1.03); }
+
+/* ─────────────────────────────────────────
+   Heart button
+───────────────────────────────────────── */
+.heart-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: none;
+  border-radius: 20px;
+  padding: 5px 8px 5px 6px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: var(--font);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, transform 0.15s;
+  z-index: 2;
+}
+
+.heart-btn:active { background: rgba(0,0,0,0.55); }
+
+.heart-icon {
+  font-size: 0.9rem;
+  display: inline-block;
+  transition: transform 0.1s ease;
+  color: rgba(255,255,255,0.75);
+}
+
+.heart-btn.hearted .heart-icon { color: #ff4d6d; }
+
+/* Pop animation when tapped */
+@keyframes heart-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.55); }
+  70%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+.heart-btn.heart-pop .heart-icon {
+  animation: heart-pop 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+.heart-count {
+  font-size: 0.7rem;
+  min-width: 8px;
+  text-align: center;
+}
 
 /* ─────────────────────────────────────────
    Lightbox
@@ -144,7 +195,6 @@ header {
 
 .lightbox.open { display: flex; }
 
-/* Dead-center the image */
 .lb-center {
   position: absolute;
   inset: 0;
@@ -156,7 +206,6 @@ header {
 
 .lb-img {
   display: block;
-  /* Explicit viewport units — always fits, never overflows */
   max-width: calc(100vw - 32px);
   max-height: calc(100vh - 100px);
   width: auto;
@@ -168,7 +217,6 @@ header {
   will-change: transform, opacity;
 }
 
-/* Buttons */
 .lb-close,
 .lb-prev,
 .lb-next {
@@ -223,22 +271,12 @@ header {
    Responsive
 ───────────────────────────────────────── */
 @media (max-width: 640px) {
-  nav {
-    padding: 16px 20px;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-
+  nav { padding: 16px 20px; gap: 16px; flex-wrap: wrap; }
   .year-nav  { gap: 14px; }
   .year-nav a { font-size: 0.9rem; }
-
   header { padding: 36px 20px 52px; }
-
   .gallery { columns: 2; }
-
-  .lb-prev,
-  .lb-next {
-    font-size: 2.5rem;
-    padding: 12px;
-  }
+  .lb-prev, .lb-next { font-size: 2.5rem; padding: 12px; }
+  .lb-prev { left: 0; }
+  .lb-next { right: 0; }
 }
