@@ -166,33 +166,34 @@ header {
   overflow: hidden;
 }
 
-/* Track is 3 panels wide */
+/* Track is 3 panels wide, use explicit viewport height */
 .lb-track {
   display: flex;
   width: 300%;
-  height: 100%;
+  height: 100vh;
   will-change: transform;
 }
 
 .lb-slide {
   width: 33.333%;
-  height: 100%;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 52px 16px 40px;
+  box-sizing: border-box;
 }
 
 .lb-slide img {
-  width: 100%;
-  height: 100%;
+  display: block;
+  width: auto;
+  height: auto;
   max-width: 100%;
-  max-height: 100%;
+  max-height: calc(100vh - 92px);
   object-fit: contain;
   user-select: none;
   -webkit-user-select: none;
   border-radius: 2px;
-  display: block;
 }
 
 /* Lightbox buttons — must sit above the stage */
