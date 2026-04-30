@@ -184,6 +184,8 @@ header {
 }
 
 .lb-slide img {
+  width: 100%;
+  height: 100%;
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
@@ -193,7 +195,8 @@ header {
   display: block;
 }
 
-/* Lightbox buttons */
+/* Lightbox buttons — must sit above the stage */
+  z-index: 10;
 .lb-close,
 .lb-prev,
 .lb-next {
