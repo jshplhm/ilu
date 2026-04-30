@@ -150,9 +150,17 @@ lightbox.addEventListener('touchstart', e => {
 }, { passive: true });
 
 lightbox.addEventListener('touchmove', e => {
+  // Always block browser zoom inside lightbox
+  if (e.touches.length > 1) {
+    e.preventDefault();
+    isPinching = true;
+    isDragging = false;
+    resetTrack();
+    return;
+  }
   if (isAnimating || isPinching) return;
-  // Second finger appeared mid-gesture — abort
-  if (e.touches.length > 1) { isPinching = true; isDragging = false; resetTrack(); return; }
+  // If browser viewport is zoomed in, don't swipe — let them pan
+  if (window.visualViewport && window.visualViewport.scale > 1.05) return;
   touchCurrentX  = e.touches[0].clientX;
   const dx = touchCurrentX - touchStartX;
   const dy = e.touches[0].clientY - touchStartY;
@@ -173,13 +181,19 @@ lightbox.addEventListener('touchmove', e => {
   const atLast  = currentIndex === currentPhotos.length - 1 && dx < 0;
   const x = -window.innerWidth + (atFirst || atLast ? dx * 0.15 : dx);
   setTrackX(x, false);
-}, { passive: true });
+}, { passive: false });
 
 lightbox.addEventListener('touchend', e => {
   // Don't navigate if this was a pinch or if fingers still on screen
   if (isPinching || e.touches.length > 0) { isDragging = false; isPinching = false; return; }
   if (!isDragging || isAnimating) { isDragging = false; return; }
   isDragging = false;
+
+  // Don't navigate if page is zoomed in
+  if (window.visualViewport && window.visualViewport.scale > 1.05) {
+    resetTrack();
+    return;
+  }
 
   const dx        = touchCurrentX - touchStartX;
   const threshold = window.innerWidth * 0.2;
