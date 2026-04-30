@@ -15,9 +15,12 @@ let isAnimating   = false;
 
 const gallery = document.getElementById('gallery');
 
-// ── Column count ───────────────────────
+// ── Column count — 4 / 3 / 2 ──────────
 function numCols() {
-  return window.innerWidth < 640 ? 2 : 4;
+  const w = window.innerWidth;
+  if (w < 540) return 2;
+  if (w < 900) return 3;
+  return 4;
 }
 
 // ── localStorage ───────────────────────
@@ -31,7 +34,6 @@ function localSet(year, data) {
 }
 
 // ── Firebase ───────────────────────────
-// Firebase keys can't contain dots — encode with ~~~ and decode on read
 function encodeKey(filename) { return filename.replace(/\./g, '~~~'); }
 function decodeKey(key)      { return key.replace(/~~~/g, '.'); }
 
@@ -46,11 +48,11 @@ async function firebaseLoadAll() {
         Object.keys(data[year] || {}).forEach(k => {
           decoded[decodeKey(k)] = data[year][k];
         });
-        // Firebase completely replaces localStorage — it's always source of truth
+        // Firebase is always source of truth — replace local
         localSet(year, decoded);
       });
     } else {
-      // Firebase is empty (e.g. after reset) — clear all local counts too
+      // Firebase empty (e.g. after reset) — clear all local counts
       ['2022','2023','2024','2025','2026'].forEach(y => localSet(y, {}));
     }
   } catch(e) {}
@@ -119,9 +121,9 @@ function makeItem(filename) {
   img.decoding = 'async';
   img.setAttribute('draggable', 'false');
   img.addEventListener('load', () => {
-  img.classList.add('loaded');
-  item.classList.add('loaded');
-   });
+    img.classList.add('loaded');
+    item.classList.add('loaded');
+  });
   img.addEventListener('error', () => { item.style.display = 'none'; });
 
   const badge = document.createElement('div');
@@ -152,7 +154,7 @@ function makeItem(filename) {
   return item;
 }
 
-// ── Build gallery (first load) ─────────
+// ── Build gallery ──────────────────────
 function buildGallery(photos) {
   gallery.innerHTML = '';
 
@@ -183,13 +185,11 @@ function flipResort() {
   isAnimating   = true;
   currentPhotos = newOrder;
 
-  // FIRST — snapshot positions
   const firstRects = new Map();
   items.forEach(item => {
     firstRects.set(item.dataset.filename, item.getBoundingClientRect());
   });
 
-  // Rebuild columns reusing existing DOM nodes
   gallery.innerHTML = '';
   const n    = numCols();
   const cols = createCols(n);
@@ -198,10 +198,8 @@ function flipResort() {
     if (el) cols[i % n].appendChild(el);
   });
 
-  // Force layout recalc
   gallery.offsetHeight;
 
-  // INVERT — snap each item back to its old visual position
   const movers = [];
   items.forEach(item => {
     const f  = firstRects.get(item.dataset.filename);
@@ -217,7 +215,6 @@ function flipResort() {
 
   if (movers.length === 0) { isAnimating = false; return; }
 
-  // PLAY — animate to final positions
   requestAnimationFrame(() => requestAnimationFrame(() => {
     let pending = movers.length;
     movers.forEach(item => {
@@ -251,6 +248,17 @@ document.querySelectorAll('.year-nav a').forEach(a => {
     showYear(a.dataset.year);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
+});
+
+// ── Responsive resize ──────────────────
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    const newN     = numCols();
+    const currentN = gallery.querySelectorAll('.gallery-col').length;
+    if (newN !== currentN) buildGallery(currentPhotos);
+  }, 150);
 });
 
 // ── Init ───────────────────────────────
