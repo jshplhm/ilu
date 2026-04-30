@@ -85,12 +85,15 @@ header {
 ───────────────────────────────────────── */
 .gallery {
   padding: 0 var(--gap) 80px;
-  columns: 4 200px;
-  column-gap: var(--gap);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-flow: row;       /* fills left-to-right, so rank 1 = top-left */
+  gap: var(--gap);
+  align-items: start;        /* photos keep natural height */
 }
 
 .gallery-loading {
-  column-span: all;
+  grid-column: 1 / -1;
   text-align: center;
   color: var(--mid);
   font-size: 0.9rem;
@@ -99,7 +102,7 @@ header {
 }
 
 .gallery-empty {
-  column-span: all;
+  grid-column: 1 / -1;
   text-align: center;
   color: var(--mid);
   font-size: 0.9rem;
@@ -215,5 +218,5 @@ header {
   .year-nav { gap: 14px; }
   .year-nav a { font-size: 0.9rem; }
   header { padding: 36px 20px 52px; }
-  .gallery { columns: 2; }
+  .gallery { grid-template-columns: repeat(2, 1fr); }
 }
