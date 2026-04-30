@@ -223,3 +223,7 @@ header {
   transform: translateY(0);
   transition: opacity 1.2s ease, transform 1.2s ease;
 }
+
+@media (max-width: 900px) and (min-width: 541px) {
+  .gallery { --cols: 3; }
+}
