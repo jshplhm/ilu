@@ -46,11 +46,12 @@ async function firebaseLoadAll() {
         Object.keys(data[year] || {}).forEach(k => {
           decoded[decodeKey(k)] = data[year][k];
         });
-        // Firebase is the source of truth — always overwrite localStorage
-        const local = localGet(year);
-        const merged = { ...local, ...decoded }; // Firebase wins on conflict
-        localSet(year, merged);
+        // Firebase completely replaces localStorage — it's always source of truth
+        localSet(year, decoded);
       });
+    } else {
+      // Firebase is empty (e.g. after reset) — clear all local counts too
+      ['2022','2023','2024','2025','2026'].forEach(y => localSet(y, {}));
     }
   } catch(e) {}
 }
