@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ilü</title>
 
-  <!-- PWA / iPhone home screen support (for later) -->
+  <!-- PWA / iPhone home screen support -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   <meta name="apple-mobile-web-app-title" content="ilü" />
@@ -20,7 +20,7 @@
 </head>
 <body>
 
-  <!-- ── Navigation ── -->
+  <!-- Navigation -->
   <nav>
     <div class="logo">ilü</div>
     <div class="year-nav" id="yearNav">
@@ -32,27 +32,34 @@
     </div>
   </nav>
 
-  <!-- ── Header message ── -->
+  <!-- Header message -->
   <header>
     <p class="message">to the greatest mom, wife, and human this world has ever known. we love you so much</p>
     <p class="signature">xo, tate &amp; daddy</p>
   </header>
 
-  <!-- ── Photo gallery ── -->
+  <!-- Photo gallery -->
   <main>
     <div class="gallery" id="gallery">
-      <div class="gallery-loading" id="galleryLoading">loading photos...</div>
+      <div class="gallery-loading">loading photos...</div>
     </div>
   </main>
 
-  <!-- ── Lightbox ── -->
+  <!-- Lightbox — 3-panel sliding carousel -->
   <div class="lightbox" id="lightbox" role="dialog" aria-modal="true">
     <button class="lb-close" id="lbClose" aria-label="Close">×</button>
     <button class="lb-prev"  id="lbPrev"  aria-label="Previous">&#8249;</button>
     <button class="lb-next"  id="lbNext"  aria-label="Next">&#8250;</button>
-    <div class="lb-img-wrap">
-      <img class="lb-img" id="lbImg" src="" alt="" />
+
+    <!-- The track holds prev / current / next side by side -->
+    <div class="lb-stage">
+      <div class="lb-track" id="lbTrack">
+        <div class="lb-slide"><img id="lbImgPrev" src="" alt="" /></div>
+        <div class="lb-slide"><img id="lbImgCur"  src="" alt="" /></div>
+        <div class="lb-slide"><img id="lbImgNext" src="" alt="" /></div>
+      </div>
     </div>
+
     <div class="lb-counter" id="lbCounter"></div>
   </div>
 
