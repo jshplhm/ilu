@@ -3,16 +3,22 @@
 ───────────────────────────────────────── */
 
 // ── CONFIG ─────────────────────────────
-const FIREBASE_URL = 'https://ilu-site-default-rtdb.firebaseio.com';
+const FIREBASE_URL = 'https://ilu-site-default-rtdb.firebaseio.com/';
 const USE_FIREBASE = FIREBASE_URL !== 'YOUR_FIREBASE_URL_HERE';
 
 let photoManifest = {};
 let currentYear   = null;
 let currentPhotos = [];
 let resortTimer   = null;
-let lastHearted   = null; // filename of most recently tapped photo
+let lastHearted   = null;
+let isAnimating   = false;
 
 const gallery = document.getElementById('gallery');
+
+// ── Column count (based on viewport) ──
+function numCols() {
+  return window.innerWidth < 640 ? 2 : 4;
+}
 
 // ── localStorage ───────────────────────
 function localGet(year) {
@@ -45,7 +51,7 @@ async function firebaseSetCount(year, filename, count) {
   } catch(e) {}
 }
 
-// ── Heart counts ───────────────────────
+// ── Hearts ─────────────────────────────
 function getCount(year, filename) {
   return localGet(year)[filename] || 0;
 }
@@ -71,20 +77,19 @@ async function loadManifest() {
   } catch(e) { photoManifest = {}; }
 }
 
-// ── Build gallery (first load only) ───
-function buildGallery(photos) {
-  gallery.innerHTML = '';
-
-  if (!photos.length) {
-    gallery.innerHTML = '<p class="gallery-empty">photos coming soon ✦</p>';
-    return;
+// ── Create column containers ───────────
+function createCols(n) {
+  const cols = [];
+  for (let i = 0; i < n; i++) {
+    const col = document.createElement('div');
+    col.className = 'gallery-col';
+    gallery.appendChild(col);
+    cols.push(col);
   }
-
-  photos.forEach(filename => {
-    gallery.appendChild(makeItem(filename));
-  });
+  return cols;
 }
 
+// ── Make a photo card ──────────────────
 function makeItem(filename) {
   const item = document.createElement('div');
   item.className = 'gallery-item';
@@ -95,6 +100,7 @@ function makeItem(filename) {
   img.alt      = '';
   img.loading  = 'lazy';
   img.decoding = 'async';
+  img.setAttribute('draggable', 'false');
   img.addEventListener('load',  () => img.classList.add('loaded'));
   img.addEventListener('error', () => { item.style.display = 'none'; });
 
@@ -105,21 +111,20 @@ function makeItem(filename) {
   if (count > 0) badge.classList.add('visible');
 
   item.addEventListener('click', () => {
-    // Pop
+    if (isAnimating) return;
+
+    // Pop animation
     item.classList.remove('popping');
     void item.offsetWidth;
     item.classList.add('popping');
     item.addEventListener('animationend', () => item.classList.remove('popping'), { once: true });
 
-    // Update badge
+    // Heart it
     const newCount = addHeart(currentYear, filename);
     badge.querySelector('.badge-count').textContent = newCount;
     badge.classList.add('visible');
 
-    // Track which photo was last hearted for special animation
     lastHearted = filename;
-
-    // Debounced FLIP resort
     clearTimeout(resortTimer);
     resortTimer = setTimeout(() => flipResort(), 2000);
   });
@@ -129,64 +134,97 @@ function makeItem(filename) {
   return item;
 }
 
+// ── Build gallery (first load) ─────────
+function buildGallery(photos) {
+  gallery.innerHTML = '';
+
+  if (!photos.length) {
+    const msg = document.createElement('p');
+    msg.className = 'gallery-message';
+    msg.textContent = 'photos coming soon ✦';
+    gallery.appendChild(msg);
+    return;
+  }
+
+  const n    = numCols();
+  const cols = createCols(n);
+  photos.forEach((filename, i) => {
+    cols[i % n].appendChild(makeItem(filename));
+  });
+}
+
 // ── FLIP resort ────────────────────────
+// Only items that actually moved animate.
+// The hearted photo gets a springy easing; others get smooth ease-out.
 function flipResort() {
   const items = [...gallery.querySelectorAll('.gallery-item')];
   if (items.length < 2) return;
 
-  // FIRST — snapshot current screen positions
-  const first = new Map();
-  items.forEach(item => {
-    first.set(item.dataset.filename, item.getBoundingClientRect());
-  });
-
-  // Compute new order
   const newOrder = sortByHearts(currentPhotos, currentYear);
-  const orderChanged = newOrder.some((f, i) => f !== currentPhotos[i]);
-  if (!orderChanged) return; // nothing to animate
+  const changed  = newOrder.some((f, i) => f !== currentPhotos[i]);
+  if (!changed) return;
+
+  isAnimating   = true;
   currentPhotos = newOrder;
 
-  // Reorder DOM nodes in place (no rebuild — images stay loaded)
-  currentPhotos.forEach(filename => {
-    const el = gallery.querySelector(`[data-filename="${CSS.escape(filename)}"]`);
-    if (el) gallery.appendChild(el);
+  // FIRST — snapshot every item's screen position
+  const firstRects = new Map();
+  items.forEach(item => {
+    firstRects.set(item.dataset.filename, item.getBoundingClientRect());
   });
 
-  // LAST — positions are now final; compute delta for each item
+  // Rebuild column structure, reusing existing DOM nodes
+  gallery.innerHTML = '';
+  const n    = numCols();
+  const cols = createCols(n);
+  currentPhotos.forEach((filename, i) => {
+    const el = items.find(el => el.dataset.filename === filename);
+    if (el) cols[i % n].appendChild(el);
+  });
+
+  // Force layout recalc before reading LAST positions
+  gallery.offsetHeight;
+
+  // INVERT — move each item back to its visual FIRST position
+  const movers = [];
   items.forEach(item => {
-    const f = first.get(item.dataset.filename);
-    const l = item.getBoundingClientRect();
+    const f  = firstRects.get(item.dataset.filename);
+    const l  = item.getBoundingClientRect();
     const dx = f.left - l.left;
     const dy = f.top  - l.top;
-
-    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return; // didn't move
-
-    // Snap back to FIRST position instantly
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
     item.style.transition = 'none';
     item.style.transform  = `translate(${dx}px, ${dy}px)`;
+    item.style.zIndex     = '3';
+    movers.push(item);
   });
 
-  // PLAY — animate everyone to their final (new) position
+  if (movers.length === 0) { isAnimating = false; return; }
+
+  // PLAY — animate all movers to their new (final) position
   requestAnimationFrame(() => requestAnimationFrame(() => {
-    items.forEach(item => {
-      if (!item.style.transform) return;
+    let pending = movers.length;
 
-      // Hearted photo gets a springy overshoot; others get smooth ease
+    movers.forEach(item => {
       const isHearted = item.dataset.filename === lastHearted;
-      const easing = isHearted
-        ? 'cubic-bezier(0.34, 1.38, 0.64, 1)'   // spring/bounce
+      const dur    = isHearted ? '0.55s' : '0.4s';
+      const ease   = isHearted
+        ? 'cubic-bezier(0.34, 1.38, 0.64, 1)'    // spring — overshoots slightly
         : 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'; // smooth ease-out
-      const duration = isHearted ? '0.55s' : '0.42s';
 
-      item.style.transition = `transform ${duration} ${easing}`;
+      item.style.transition = `transform ${dur} ${ease}`;
       item.style.transform  = '';
 
       item.addEventListener('transitionend', () => {
         item.style.transition = '';
-        item.style.transform  = '';
+        item.style.zIndex     = '';
+        pending--;
+        if (pending === 0) {
+          isAnimating = false;
+          lastHearted = null;
+        }
       }, { once: true });
     });
-    lastHearted = null;
   }));
 }
 
@@ -213,6 +251,6 @@ document.querySelectorAll('.year-nav a').forEach(a => {
 (async () => {
   await Promise.all([loadManifest(), firebaseLoadAll()]);
   const years = ['2026', '2025', '2024', '2023', '2022'];
-  const def = years.find(y => (photoManifest[y] || []).length > 0) || '2026';
+  const def   = years.find(y => (photoManifest[y] || []).length > 0) || '2026';
   showYear(def);
 })();
