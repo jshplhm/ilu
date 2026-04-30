@@ -41,7 +41,6 @@ nav {
   font-size: 1.4rem;
   font-weight: 900;
   letter-spacing: -0.03em;
-  color: var(--black);
 }
 
 .year-nav {
@@ -60,12 +59,8 @@ nav {
   transition: opacity 0.2s, border-color 0.2s;
 }
 
-.year-nav a:hover { opacity: 0.65; }
-
-.year-nav a.active {
-  opacity: 1;
-  border-bottom-color: var(--black);
-}
+.year-nav a:hover  { opacity: 0.65; }
+.year-nav a.active { opacity: 1; border-bottom-color: var(--black); }
 
 /* ─────────────────────────────────────────
    Header
@@ -107,7 +102,6 @@ header {
   font-size: 0.9rem;
   padding: 48px 0;
   letter-spacing: 0.05em;
-  text-transform: lowercase;
 }
 
 .gallery-empty {
@@ -134,63 +128,47 @@ header {
   opacity: 0;
 }
 
-.gallery-item img.loaded { opacity: 1; }
-
-.gallery-item:hover img { transform: scale(1.03); }
+.gallery-item img.loaded  { opacity: 1; }
+.gallery-item:hover img   { transform: scale(1.03); }
 
 /* ─────────────────────────────────────────
-   Lightbox — carousel
+   Lightbox
 ───────────────────────────────────────── */
 .lightbox {
   display: none;
   position: fixed;
   inset: 0;
-  background: #000;
+  background: rgba(0,0,0,0.95);
   z-index: 9999;
-  overflow: hidden;
-  touch-action: none;
 }
 
-.lightbox.open { display: block; }
+.lightbox.open { display: flex; }
 
-/* Stage clips the track */
-.lb-stage {
+/* Dead-center the image */
+.lb-center {
   position: absolute;
   inset: 0;
-  overflow: hidden;
-}
-
-/* Track is 3 panels wide */
-.lb-track {
-  display: flex;
-  width: 300%;
-  height: 100vh;
-  will-change: transform;
-}
-
-.lb-slide {
-  width: 33.333%;
-  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 52px 16px 40px;
-  box-sizing: border-box;
+  padding: 56px 16px 44px;
 }
 
-.lb-slide img {
+.lb-img {
   display: block;
+  /* Explicit viewport units — always fits, never overflows */
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 100px);
   width: auto;
   height: auto;
-  max-width: 100%;
-  max-height: calc(100vh - 92px);
   object-fit: contain;
   user-select: none;
   -webkit-user-select: none;
   border-radius: 2px;
+  will-change: transform, opacity;
 }
 
-/* Buttons sit above the stage */
+/* Buttons */
 .lb-close,
 .lb-prev,
 .lb-next {
@@ -198,10 +176,11 @@ header {
   z-index: 10;
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255,255,255,0.75);
   cursor: pointer;
   transition: color 0.15s;
   line-height: 1;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .lb-close:hover,
@@ -209,8 +188,8 @@ header {
 .lb-next:hover { color: #fff; }
 
 .lb-close {
-  top: 18px;
-  right: 22px;
+  top: 16px;
+  right: 20px;
   font-size: 2.5rem;
   font-weight: 300;
 }
@@ -224,19 +203,20 @@ header {
   padding: 20px;
 }
 
-.lb-prev { left: 4px; }
-.lb-next { right: 4px; }
+.lb-prev { left: 0; }
+.lb-next { right: 0; }
 
 .lb-counter {
   position: absolute;
   z-index: 10;
-  bottom: 18px;
+  bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.8rem;
+  color: rgba(255,255,255,0.45);
+  font-size: 0.78rem;
   letter-spacing: 0.08em;
   font-family: var(--font);
+  white-space: nowrap;
 }
 
 /* ─────────────────────────────────────────
@@ -249,7 +229,7 @@ header {
     flex-wrap: wrap;
   }
 
-  .year-nav { gap: 14px; }
+  .year-nav  { gap: 14px; }
   .year-nav a { font-size: 0.9rem; }
 
   header { padding: 36px 20px 52px; }
@@ -259,9 +239,6 @@ header {
   .lb-prev,
   .lb-next {
     font-size: 2.5rem;
-    padding: 10px;
+    padding: 12px;
   }
-
-  .lb-prev { left: 0; }
-  .lb-next { right: 0; }
 }
