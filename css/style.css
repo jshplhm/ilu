@@ -223,3 +223,11 @@ header {
   transform: translateY(0);
   transition: opacity 1.2s ease, transform 1.2s ease;
 }
+
+.logo-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  vertical-align: middle;
+  margin-right: 8px;
+}
