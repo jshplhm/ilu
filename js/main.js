@@ -15,7 +15,7 @@ let isAnimating   = false;
 
 const gallery = document.getElementById('gallery');
 
-// ── Column count (based on viewport) ──
+// ── Column count ───────────────────────
 function numCols() {
   return window.innerWidth < 640 ? 2 : 4;
 }
@@ -31,22 +31,35 @@ function localSet(year, data) {
 }
 
 // ── Firebase ───────────────────────────
+// Firebase keys can't contain dots — encode with ~~~ and decode on read
+function encodeKey(filename) { return filename.replace(/\./g, '~~~'); }
+function decodeKey(key)      { return key.replace(/~~~/g, '.'); }
+
 async function firebaseLoadAll() {
   if (!USE_FIREBASE) return;
   try {
     const res  = await fetch(`${FIREBASE_URL}/hearts.json`);
     const data = await res.json();
-    if (data) Object.keys(data).forEach(y => localSet(y, data[y]));
+    if (data) {
+      Object.keys(data).forEach(year => {
+        const decoded = {};
+        Object.keys(data[year] || {}).forEach(k => {
+          decoded[decodeKey(k)] = data[year][k];
+        });
+        localSet(year, decoded);
+      });
+    }
   } catch(e) {}
 }
 
 async function firebaseSetCount(year, filename, count) {
   if (!USE_FIREBASE) return;
+  const key = encodeKey(filename);
   try {
     await fetch(`${FIREBASE_URL}/hearts/${year}.json`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ [filename]: count })
+      body: JSON.stringify({ [key]: count })
     });
   } catch(e) {}
 }
@@ -113,13 +126,11 @@ function makeItem(filename) {
   item.addEventListener('click', () => {
     if (isAnimating) return;
 
-    // Pop animation
     item.classList.remove('popping');
     void item.offsetWidth;
     item.classList.add('popping');
     item.addEventListener('animationend', () => item.classList.remove('popping'), { once: true });
 
-    // Heart it
     const newCount = addHeart(currentYear, filename);
     badge.querySelector('.badge-count').textContent = newCount;
     badge.classList.add('visible');
@@ -154,8 +165,6 @@ function buildGallery(photos) {
 }
 
 // ── FLIP resort ────────────────────────
-// Only items that actually moved animate.
-// The hearted photo gets a springy easing; others get smooth ease-out.
 function flipResort() {
   const items = [...gallery.querySelectorAll('.gallery-item')];
   if (items.length < 2) return;
@@ -167,13 +176,13 @@ function flipResort() {
   isAnimating   = true;
   currentPhotos = newOrder;
 
-  // FIRST — snapshot every item's screen position
+  // FIRST — snapshot positions
   const firstRects = new Map();
   items.forEach(item => {
     firstRects.set(item.dataset.filename, item.getBoundingClientRect());
   });
 
-  // Rebuild column structure, reusing existing DOM nodes
+  // Rebuild columns reusing existing DOM nodes
   gallery.innerHTML = '';
   const n    = numCols();
   const cols = createCols(n);
@@ -182,10 +191,10 @@ function flipResort() {
     if (el) cols[i % n].appendChild(el);
   });
 
-  // Force layout recalc before reading LAST positions
+  // Force layout recalc
   gallery.offsetHeight;
 
-  // INVERT — move each item back to its visual FIRST position
+  // INVERT — snap each item back to its old visual position
   const movers = [];
   items.forEach(item => {
     const f  = firstRects.get(item.dataset.filename);
@@ -201,28 +210,18 @@ function flipResort() {
 
   if (movers.length === 0) { isAnimating = false; return; }
 
-  // PLAY — animate all movers to their new (final) position
+  // PLAY — animate to final positions
   requestAnimationFrame(() => requestAnimationFrame(() => {
     let pending = movers.length;
-
     movers.forEach(item => {
       const isHearted = item.dataset.filename === lastHearted;
-      const dur    = isHearted ? '0.55s' : '0.4s';
-      const ease   = isHearted
-        ? 'cubic-bezier(0.34, 1.38, 0.64, 1)'    // spring — overshoots slightly
-        : 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'; // smooth ease-out
-
-      item.style.transition = `transform ${dur} ${ease}`;
+      item.style.transition = `transform ${isHearted ? '0.55s cubic-bezier(0.34,1.38,0.64,1)' : '0.4s cubic-bezier(0.25,0.46,0.45,0.94)'}`;
       item.style.transform  = '';
-
       item.addEventListener('transitionend', () => {
         item.style.transition = '';
         item.style.zIndex     = '';
         pending--;
-        if (pending === 0) {
-          isAnimating = false;
-          lastHearted = null;
-        }
+        if (pending === 0) { isAnimating = false; lastHearted = null; }
       }, { once: true });
     });
   }));
