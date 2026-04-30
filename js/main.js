@@ -6,6 +6,7 @@ let photoManifest = {};
 let currentYear   = null;
 let currentPhotos = [];
 let currentIndex  = 0;
+let resortTimer   = null;
 
 // Touch tracking
 let touchStartX   = 0;
@@ -21,6 +22,34 @@ const lightbox  = document.getElementById('lightbox');
 const lbImg     = document.getElementById('lbImg');
 const lbCounter = document.getElementById('lbCounter');
 
+// ── Hearts (localStorage) ──────────────
+function heartsKey(year) {
+  return `ilu_hearts_${year}`;
+}
+
+function getHearts(year) {
+  try {
+    return JSON.parse(localStorage.getItem(heartsKey(year))) || {};
+  } catch(e) { return {}; }
+}
+
+function saveHearts(year, hearts) {
+  try {
+    localStorage.setItem(heartsKey(year), JSON.stringify(hearts));
+  } catch(e) {}
+}
+
+function getCount(year, filename) {
+  return getHearts(year)[filename] || 0;
+}
+
+function addHeart(year, filename) {
+  const hearts = getHearts(year);
+  hearts[filename] = (hearts[filename] || 0) + 1;
+  saveHearts(year, hearts);
+  return hearts[filename];
+}
+
 // ── Utilities ──────────────────────────
 function shuffle(arr) {
   const a = [...arr];
@@ -29,6 +58,10 @@ function shuffle(arr) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+function sortByHearts(arr, year) {
+  return [...arr].sort((a, b) => getCount(year, b) - getCount(year, a));
 }
 
 function src(index) {
@@ -44,24 +77,20 @@ async function loadManifest() {
   } catch(e) { photoManifest = {}; }
 }
 
-// ── Gallery ────────────────────────────
-function showYear(year) {
-  currentYear = String(year);
-  document.querySelectorAll('.year-nav a').forEach(a => {
-    a.classList.toggle('active', a.dataset.year === currentYear);
-  });
-
-  currentPhotos = shuffle(photoManifest[currentYear] || []);
+// ── Build gallery ──────────────────────
+function buildGallery(photos) {
   gallery.innerHTML = '';
 
-  if (!currentPhotos.length) {
+  if (!photos.length) {
     gallery.innerHTML = '<p class="gallery-empty">photos coming soon ✦</p>';
     return;
   }
 
-  currentPhotos.forEach((filename, i) => {
+  photos.forEach((filename, i) => {
     const item = document.createElement('div');
     item.className = 'gallery-item';
+    item.dataset.filename = filename;
+
     const img = document.createElement('img');
     img.src = `photos/${currentYear}/${filename}`;
     img.alt = '';
@@ -69,16 +98,79 @@ function showYear(year) {
     img.decoding = 'async';
     img.addEventListener('load',  () => img.classList.add('loaded'));
     img.addEventListener('error', () => { item.style.display = 'none'; });
-    item.addEventListener('click', () => openLightbox(i));
+    img.addEventListener('click', () => {
+      const idx = currentPhotos.indexOf(filename);
+      if (idx !== -1) openLightbox(idx);
+    });
+
+    // Heart button
+    const heartBtn = document.createElement('button');
+    heartBtn.className = 'heart-btn';
+    heartBtn.setAttribute('aria-label', 'Heart this photo');
+    heartBtn.innerHTML = `<span class="heart-icon">♥</span><span class="heart-count">${getCount(currentYear, filename) || ''}</span>`;
+
+    heartBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const count = addHeart(currentYear, filename);
+
+      // Update count display
+      heartBtn.querySelector('.heart-count').textContent = count;
+
+      // Pop animation
+      heartBtn.classList.remove('heart-pop');
+      void heartBtn.offsetWidth; // force reflow
+      heartBtn.classList.add('heart-pop');
+      heartBtn.classList.add('hearted');
+
+      // Debounced resort — 2s after last tap
+      clearTimeout(resortTimer);
+      resortTimer = setTimeout(() => resortGallery(), 2000);
+    });
+
     item.appendChild(img);
+    item.appendChild(heartBtn);
     gallery.appendChild(item);
   });
+}
+
+// ── Resort with fade ───────────────────
+function resortGallery() {
+  // Fade out
+  gallery.style.transition = 'opacity 0.3s ease';
+  gallery.style.opacity    = '0';
+
+  setTimeout(() => {
+    // Re-sort and rebuild
+    currentPhotos = sortByHearts(currentPhotos, currentYear);
+    buildGallery(currentPhotos);
+
+    // Fade back in
+    requestAnimationFrame(() => {
+      gallery.style.opacity = '1';
+      setTimeout(() => { gallery.style.transition = ''; }, 320);
+    });
+  }, 320);
+}
+
+// ── Show year ──────────────────────────
+function showYear(year) {
+  currentYear = String(year);
+  document.querySelectorAll('.year-nav a').forEach(a => {
+    a.classList.toggle('active', a.dataset.year === currentYear);
+  });
+
+  // Start with hearts-sorted order (most loved on top)
+  const raw = photoManifest[currentYear] || [];
+  const hasHearts = raw.some(f => getCount(currentYear, f) > 0);
+  currentPhotos = hasHearts ? sortByHearts(raw, currentYear) : shuffle(raw);
+
+  buildGallery(currentPhotos);
 }
 
 // ── Lightbox ───────────────────────────
 function openLightbox(index) {
   currentIndex = index;
-  lbImg.style.cssText = '';   // clear any leftover animation styles
+  lbImg.style.cssText = '';
   lbImg.src = src(currentIndex);
   lbCounter.textContent = `${currentIndex + 1} / ${currentPhotos.length}`;
   lightbox.classList.add('open');
@@ -98,7 +190,6 @@ function preload(index) {
   new Image().src = src(i);
 }
 
-// ── Navigate with slide ─────────────────
 function navigate(dir) {
   if (isAnimating) return;
   isAnimating = true;
@@ -106,7 +197,6 @@ function navigate(dir) {
   const outX = dir > 0 ? '-60vw' : '60vw';
   const inX  = dir > 0 ?  '60vw' : '-60vw';
 
-  // Slide current out
   lbImg.style.transition = 'transform 0.25s ease-in, opacity 0.25s ease-in';
   lbImg.style.transform  = `translateX(${outX})`;
   lbImg.style.opacity    = '0';
@@ -115,8 +205,6 @@ function navigate(dir) {
     currentIndex = (currentIndex + dir + currentPhotos.length) % currentPhotos.length;
     lbImg.src = src(currentIndex);
     lbCounter.textContent = `${currentIndex + 1} / ${currentPhotos.length}`;
-
-    // Position new image on opposite side instantly
     lbImg.style.transition = 'none';
     lbImg.style.transform  = `translateX(${inX})`;
     lbImg.style.opacity    = '0';
@@ -135,7 +223,7 @@ function navigate(dir) {
   }, 250);
 }
 
-// ── Touch — image follows finger ───────
+// ── Touch swipe in lightbox ─────────────
 lightbox.addEventListener('touchstart', e => {
   if (isAnimating) return;
   if (e.touches.length > 1) { isPinching = true; return; }
@@ -151,13 +239,10 @@ lightbox.addEventListener('touchstart', e => {
 lightbox.addEventListener('touchmove', e => {
   if (isPinching || isAnimating) return;
   if (e.touches.length > 1) {
-    isPinching = true;
-    isDragging = false;
+    isPinching = true; isDragging = false;
     lbImg.style.cssText = '';
     return;
   }
-
-  // Don't swipe if browser is zoomed in
   if (window.visualViewport && window.visualViewport.scale > 1.05) return;
 
   touchCurrentX = e.touches[0].clientX;
@@ -169,41 +254,32 @@ lightbox.addEventListener('touchmove', e => {
     else if (Math.abs(dy) > Math.abs(dx) + 5) axisLocked = 'v';
     else return;
   }
-
   if (axisLocked === 'v') return;
 
   isDragging = true;
-
-  // Slight resistance at first/last photo
   const atEdge = (currentIndex === 0 && dx > 0) ||
                  (currentIndex === currentPhotos.length - 1 && dx < 0);
   const x = atEdge ? dx * 0.15 : dx;
-
   lbImg.style.transform = `translateX(${x}px)`;
   lbImg.style.opacity   = String(Math.max(0.4, 1 - Math.abs(x) / (window.innerWidth * 0.8)));
 }, { passive: true });
 
 lightbox.addEventListener('touchend', e => {
   if (isPinching || e.touches.length > 0) {
-    isPinching = false;
-    isDragging = false;
-    return;
+    isPinching = false; isDragging = false; return;
   }
   if (!isDragging || isAnimating) { isDragging = false; return; }
   isDragging = false;
-
   if (window.visualViewport && window.visualViewport.scale > 1.05) {
-    lbImg.style.cssText = '';
-    return;
+    lbImg.style.cssText = ''; return;
   }
 
-  const dx        = touchCurrentX - touchStartX;
+  const dx = touchCurrentX - touchStartX;
   const threshold = window.innerWidth * 0.2;
 
   if (dx < -threshold)     navigate(1);
   else if (dx > threshold) navigate(-1);
   else {
-    // snap back
     lbImg.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
     lbImg.style.transform  = 'translateX(0)';
     lbImg.style.opacity    = '1';
@@ -215,11 +291,7 @@ lightbox.addEventListener('touchend', e => {
 document.getElementById('lbClose').addEventListener('click', closeLightbox);
 document.getElementById('lbPrev').addEventListener('click', () => navigate(-1));
 document.getElementById('lbNext').addEventListener('click', () => navigate(1));
-
-lightbox.addEventListener('click', e => {
-  if (e.target === lightbox) closeLightbox();
-});
-
+lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
 document.addEventListener('keydown', e => {
   if (!lightbox.classList.contains('open')) return;
   if (e.key === 'ArrowLeft')  navigate(-1);
