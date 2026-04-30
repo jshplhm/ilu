@@ -106,177 +106,114 @@ header {
   padding: 80px 24px;
 }
 
+/* Each photo card */
 .gallery-item {
   break-inside: avoid;
   margin-bottom: var(--gap);
-  cursor: pointer;
+  position: relative;
   overflow: hidden;
   background: #f0f0f0;
-  position: relative; /* needed for heart button overlay */
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 2px;
 }
 
 .gallery-item img {
   width: 100%;
   height: auto;
   display: block;
-  transition: transform 0.35s ease, opacity 0.3s ease;
   opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none; /* clicks go to the card, not the img */
 }
 
 .gallery-item img.loaded { opacity: 1; }
-.gallery-item:hover img  { transform: scale(1.03); }
 
-/* ─────────────────────────────────────────
-   Heart button
-───────────────────────────────────────── */
-.heart-btn {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  border: none;
-  border-radius: 20px;
-  padding: 5px 8px 5px 6px;
-  cursor: pointer;
-  color: rgba(255, 255, 255, 0.85);
-  font-family: var(--font);
-  font-size: 0.72rem;
-  font-weight: 600;
-  line-height: 1;
-  -webkit-tap-highlight-color: transparent;
-  transition: background 0.15s, transform 0.15s;
-  z-index: 2;
+/* Hover: subtle lift on desktop */
+@media (hover: hover) {
+  .gallery-item:hover { transform: scale(1.02); transition: transform 0.2s ease; }
 }
 
-.heart-btn:active { background: rgba(0,0,0,0.55); }
-
-.heart-icon {
-  font-size: 0.9rem;
-  display: inline-block;
-  transition: transform 0.1s ease;
-  color: rgba(255,255,255,0.75);
-}
-
-.heart-btn.hearted .heart-icon { color: #ff4d6d; }
-
-/* Pop animation when tapped */
-@keyframes heart-pop {
+/* Click pop animation */
+@keyframes card-pop {
   0%   { transform: scale(1); }
-  40%  { transform: scale(1.55); }
-  70%  { transform: scale(0.9); }
+  35%  { transform: scale(0.94); }
+  70%  { transform: scale(1.03); }
   100% { transform: scale(1); }
 }
 
-.heart-btn.heart-pop .heart-icon {
-  animation: heart-pop 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97);
-}
-
-.heart-count {
-  font-size: 0.7rem;
-  min-width: 8px;
-  text-align: center;
+.gallery-item.popping {
+  animation: card-pop 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
 
 /* ─────────────────────────────────────────
-   Lightbox
+   Heart overlay
 ───────────────────────────────────────── */
-.lightbox {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.95);
-  z-index: 9999;
-}
-
-.lightbox.open { display: flex; }
-
-.lb-center {
+.heart-overlay {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 56px 16px 44px;
+  pointer-events: none;
+  opacity: 0;
 }
 
-.lb-img {
-  display: block;
-  max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 100px);
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  user-select: none;
-  -webkit-user-select: none;
-  border-radius: 2px;
-  will-change: transform, opacity;
+/* Big heart burst that fades out */
+@keyframes heart-burst {
+  0%   { opacity: 0;   transform: scale(0.3); }
+  30%  { opacity: 1;   transform: scale(1.2); }
+  60%  { opacity: 0.8; transform: scale(1); }
+  100% { opacity: 0;   transform: scale(1.1); }
 }
 
-.lb-close,
-.lb-prev,
-.lb-next {
+.heart-overlay.burst {
+  animation: heart-burst 0.5s ease forwards;
+}
+
+.heart-overlay-icon {
+  font-size: 3rem;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.25));
+}
+
+/* Small persistent heart + count badge — bottom right */
+.heart-badge {
   position: absolute;
-  z-index: 10;
-  background: none;
-  border: none;
-  color: rgba(255,255,255,0.75);
-  cursor: pointer;
-  transition: color 0.15s;
-  line-height: 1;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.lb-close:hover,
-.lb-prev:hover,
-.lb-next:hover { color: #fff; }
-
-.lb-close {
-  top: 16px;
-  right: 20px;
-  font-size: 2.5rem;
-  font-weight: 300;
-}
-
-.lb-prev,
-.lb-next {
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 4rem;
-  font-weight: 200;
-  padding: 20px;
-}
-
-.lb-prev { left: 0; }
-.lb-next { right: 0; }
-
-.lb-counter {
-  position: absolute;
-  z-index: 10;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: rgba(255,255,255,0.45);
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
+  bottom: 7px;
+  right: 7px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(0,0,0,0.38);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: 20px;
+  padding: 4px 7px 4px 5px;
+  color: #fff;
   font-family: var(--font);
-  white-space: nowrap;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
+
+.heart-badge.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.heart-badge-icon { font-size: 0.75rem; color: #ff4d6d; }
 
 /* ─────────────────────────────────────────
    Responsive
 ───────────────────────────────────────── */
 @media (max-width: 640px) {
   nav { padding: 16px 20px; gap: 16px; flex-wrap: wrap; }
-  .year-nav  { gap: 14px; }
+  .year-nav { gap: 14px; }
   .year-nav a { font-size: 0.9rem; }
   header { padding: 36px 20px 52px; }
   .gallery { columns: 2; }
-  .lb-prev, .lb-next { font-size: 2.5rem; padding: 12px; }
-  .lb-prev { left: 0; }
-  .lb-next { right: 0; }
 }
