@@ -117,7 +117,10 @@ function makeItem(filename) {
   img.loading  = 'lazy';
   img.decoding = 'async';
   img.setAttribute('draggable', 'false');
-  img.addEventListener('load',  () => img.classList.add('loaded'));
+  img.addEventListener('load', () => {
+  img.classList.add('loaded');
+  item.classList.add('loaded');
+   });
   img.addEventListener('error', () => { item.style.display = 'none'; });
 
   const badge = document.createElement('div');
