@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────
-   ilü — main.js
+   ilü — main.js  (carousel lightbox)
 ───────────────────────────────────────── */
 
 // ── State ──────────────────────────────
@@ -14,14 +14,18 @@ let touchStartY   = 0;
 let touchCurrentX = 0;
 let isDragging    = false;
 let isAnimating   = false;
+let axisLocked    = null; // 'h' or 'v'
 
 // ── DOM refs ───────────────────────────
 const gallery   = document.getElementById('gallery');
 const lightbox  = document.getElementById('lightbox');
-const lbImg     = document.getElementById('lbImg');
+const lbTrack   = document.getElementById('lbTrack');
 const lbCounter = document.getElementById('lbCounter');
+const imgPrev   = document.getElementById('lbImgPrev');
+const imgCur    = document.getElementById('lbImgCur');
+const imgNext   = document.getElementById('lbImgNext');
 
-// ── Utility: Fisher-Yates shuffle ──────
+// ── Helpers ────────────────────────────
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -31,178 +35,165 @@ function shuffle(arr) {
   return a;
 }
 
+function photoSrc(index) {
+  const i = (index + currentPhotos.length) % currentPhotos.length;
+  return `photos/${currentYear}/${currentPhotos[i]}`;
+}
+
 // ── Load photos.json ───────────────────
 async function loadManifest() {
   try {
     const res = await fetch('photos.json');
     photoManifest = await res.json();
   } catch (e) {
-    console.error('Could not load photos.json', e);
     photoManifest = {};
   }
 }
 
-// ── Show photos for a year ─────────────
+// ── Show year ──────────────────────────
 function showYear(year) {
   currentYear = String(year);
-
   document.querySelectorAll('.year-nav a').forEach(a => {
     a.classList.toggle('active', a.dataset.year === currentYear);
   });
 
-  const raw = photoManifest[currentYear] || [];
-  currentPhotos = shuffle(raw);
+  currentPhotos = shuffle(photoManifest[currentYear] || []);
   gallery.innerHTML = '';
 
   if (currentPhotos.length === 0) {
-    gallery.innerHTML = '<p class="gallery-empty">photos coming soon \u2726</p>';
+    gallery.innerHTML = '<p class="gallery-empty">photos coming soon ✦</p>';
     return;
   }
 
   currentPhotos.forEach((filename, i) => {
     const item = document.createElement('div');
     item.className = 'gallery-item';
-
     const img = document.createElement('img');
-    img.src      = `photos/${currentYear}/${filename}`;
-    img.alt      = '';
-    img.loading  = 'lazy';
+    img.src = `photos/${currentYear}/${filename}`;
+    img.alt = '';
+    img.loading = 'lazy';
     img.decoding = 'async';
-
     img.addEventListener('load',  () => img.classList.add('loaded'));
     img.addEventListener('error', () => { item.style.display = 'none'; });
-
     item.addEventListener('click', () => openLightbox(i));
     item.appendChild(img);
     gallery.appendChild(item);
   });
 }
 
+// ── Carousel track position ────────────
+// Track is 300% wide. Panel order: [prev][cur][next]
+// Resting position shows the middle panel = translateX(-100vw)
+function setTrackX(x, animate) {
+  lbTrack.style.transition = animate
+    ? 'transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+    : 'none';
+  lbTrack.style.transform = `translateX(${x}px)`;
+}
+
+function resetTrack() {
+  setTrackX(-window.innerWidth, false);
+}
+
+function loadPanels() {
+  imgPrev.src = photoSrc(currentIndex - 1);
+  imgCur.src  = photoSrc(currentIndex);
+  imgNext.src = photoSrc(currentIndex + 1);
+  lbCounter.textContent = `${currentIndex + 1} / ${currentPhotos.length}`;
+}
+
 // ── Lightbox open / close ──────────────
 function openLightbox(index) {
   currentIndex = index;
-  lbImg.style.transform  = '';
-  lbImg.style.transition = '';
-  lbImg.style.opacity    = '1';
-  setLightboxSrc(currentIndex);
+  loadPanels();
+  resetTrack();
   lightbox.classList.add('open');
   document.body.style.overflow = 'hidden';
-  preloadAdjacent();
 }
 
 function closeLightbox() {
   lightbox.classList.remove('open');
   document.body.style.overflow = '';
-  setTimeout(() => { lbImg.src = ''; }, 300);
 }
 
-function setLightboxSrc(index) {
-  lbImg.src = `photos/${currentYear}/${currentPhotos[index]}`;
-  lbCounter.textContent = `${index + 1} / ${currentPhotos.length}`;
-}
-
-function preloadAdjacent() {
-  const preload = (i) => {
-    const idx = (i + currentPhotos.length) % currentPhotos.length;
-    const pre = new Image();
-    pre.src = `photos/${currentYear}/${currentPhotos[idx]}`;
-  };
-  preload(currentIndex + 1);
-  preload(currentIndex - 1);
-}
-
-// ── Navigate with slide animation ──────
+// ── Navigate ───────────────────────────
 function navigate(dir) {
   if (isAnimating) return;
   isAnimating = true;
 
-  const slideOut = dir > 0 ? -110 : 110;
+  const targetX = -window.innerWidth + (-dir * window.innerWidth);
+  setTrackX(targetX, true);
 
-  lbImg.style.transition = 'transform 0.28s cubic-bezier(0.4,0,0.2,1), opacity 0.28s ease';
-  lbImg.style.transform  = `translateX(${slideOut}%)`;
-  lbImg.style.opacity    = '0';
-
-  setTimeout(() => {
+  lbTrack.addEventListener('transitionend', function onDone() {
+    lbTrack.removeEventListener('transitionend', onDone);
     currentIndex = (currentIndex + dir + currentPhotos.length) % currentPhotos.length;
-    setLightboxSrc(currentIndex);
-
-    lbImg.style.transition = 'none';
-    lbImg.style.transform  = `translateX(${-slideOut}%)`;
-    lbImg.style.opacity    = '0';
-
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        lbImg.style.transition = 'transform 0.28s cubic-bezier(0.4,0,0.2,1), opacity 0.28s ease';
-        lbImg.style.transform  = 'translateX(0)';
-        lbImg.style.opacity    = '1';
-
-        setTimeout(() => {
-          lbImg.style.transition = '';
-          isAnimating = false;
-          preloadAdjacent();
-        }, 290);
-      });
-    });
-  }, 280);
+    loadPanels();
+    resetTrack();
+    isAnimating = false;
+  }, { once: true });
 }
 
-// ── Touch swipe — image follows finger ─
+// ── Touch — track follows finger ───────
+let isPinching = false;
+
 lightbox.addEventListener('touchstart', e => {
   if (isAnimating) return;
+  // More than one finger = pinch zoom, ignore entirely
+  if (e.touches.length > 1) { isPinching = true; return; }
+  isPinching    = false;
   touchStartX   = e.touches[0].clientX;
   touchStartY   = e.touches[0].clientY;
   touchCurrentX = touchStartX;
   isDragging    = false;
-  scrollLocked  = false;
-  lbImg.style.transition = 'none';
+  axisLocked    = null;
+  setTrackX(-window.innerWidth, false);
 }, { passive: true });
 
 lightbox.addEventListener('touchmove', e => {
-  if (isAnimating) return;
-  touchCurrentX = e.touches[0].clientX;
+  if (isAnimating || isPinching) return;
+  // Second finger appeared mid-gesture — abort
+  if (e.touches.length > 1) { isPinching = true; isDragging = false; resetTrack(); return; }
+  touchCurrentX  = e.touches[0].clientX;
   const dx = touchCurrentX - touchStartX;
   const dy = e.touches[0].clientY - touchStartY;
 
-  if (!scrollLocked) {
-    if (Math.abs(dx) > Math.abs(dy) + 5) {
-      scrollLocked = true;
-      isDragging   = true;
-    } else if (Math.abs(dy) > Math.abs(dx) + 5) {
-      return;
-    }
+  // Determine axis on first move
+  if (!axisLocked) {
+    if (Math.abs(dx) > Math.abs(dy) + 4)      axisLocked = 'h';
+    else if (Math.abs(dy) > Math.abs(dx) + 4) axisLocked = 'v';
+    else return;
   }
 
-  if (!isDragging) return;
+  if (axisLocked === 'v') return; // let page scroll
 
+  isDragging = true;
+
+  // Resistance at ends
   const atFirst = currentIndex === 0 && dx > 0;
   const atLast  = currentIndex === currentPhotos.length - 1 && dx < 0;
-  const x = (atFirst || atLast) ? dx * 0.2 : dx;
-
-  lbImg.style.transform = `translateX(${x}px)`;
-  lbImg.style.opacity   = String(1 - Math.abs(x) / (window.innerWidth * 1.2));
+  const x = -window.innerWidth + (atFirst || atLast ? dx * 0.15 : dx);
+  setTrackX(x, false);
 }, { passive: true });
 
-lightbox.addEventListener('touchend', () => {
-  if (!isDragging || isAnimating) {
-    isDragging = false;
-    return;
-  }
+lightbox.addEventListener('touchend', e => {
+  // Don't navigate if this was a pinch or if fingers still on screen
+  if (isPinching || e.touches.length > 0) { isDragging = false; isPinching = false; return; }
+  if (!isDragging || isAnimating) { isDragging = false; return; }
   isDragging = false;
 
   const dx        = touchCurrentX - touchStartX;
-  const threshold = window.innerWidth * 0.22;
+  const threshold = window.innerWidth * 0.2;
 
-  if (Math.abs(dx) > threshold) {
-    navigate(dx > 0 ? -1 : 1);
-  } else {
-    lbImg.style.transition = 'transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.35s ease';
-    lbImg.style.transform  = 'translateX(0)';
-    lbImg.style.opacity    = '1';
-    setTimeout(() => { lbImg.style.transition = ''; }, 360);
+  if (dx < -threshold)      navigate(1);   // swipe left  → next
+  else if (dx > threshold)  navigate(-1);  // swipe right → prev
+  else {
+    // snap back
+    setTrackX(-window.innerWidth, true);
+    lbTrack.addEventListener('transitionend', () => {}, { once: true });
   }
 }, { passive: true });
 
-// ── Button & keyboard controls ─────────
+// ── Buttons & keyboard ─────────────────
 document.getElementById('lbClose').addEventListener('click', closeLightbox);
 document.getElementById('lbPrev').addEventListener('click', () => navigate(-1));
 document.getElementById('lbNext').addEventListener('click', () => navigate(1));
@@ -213,12 +204,12 @@ lightbox.addEventListener('click', e => {
 
 document.addEventListener('keydown', e => {
   if (!lightbox.classList.contains('open')) return;
-  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   navigate(-1);
-  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') navigate(1);
-  if (e.key === 'Escape')                              closeLightbox();
+  if (e.key === 'ArrowLeft')  navigate(-1);
+  if (e.key === 'ArrowRight') navigate(1);
+  if (e.key === 'Escape')     closeLightbox();
 });
 
-// ── Year nav clicks ────────────────────
+// ── Year nav ───────────────────────────
 document.querySelectorAll('.year-nav a').forEach(a => {
   a.addEventListener('click', e => {
     e.preventDefault();
