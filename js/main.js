@@ -265,6 +265,28 @@ window.addEventListener('resize', () => {
 (async () => {
   await Promise.all([loadManifest(), firebaseLoadAll()]);
   const years = ['2026', '2025', '2024', '2023', '2022'];
-  const def   = years.find(y => (photoManifest[y] || []).length > 0) || '2026';
-  showYear(def);
+  const def = years.find(y => (photoManifest[y] || []).length > 0) || '2026';
+
+  // Load year from URL hash if present (e.g. ilü.com/#2024)
+  const hash = window.location.hash.replace('#', '');
+  const startYear = years.includes(hash) ? hash : def;
+  showYear(startYear);
+
+  // Update URL hash when switching years
+  document.querySelectorAll('.year-nav a').forEach(a => {
+    a.addEventListener('click', () => {
+      window.location.hash = a.dataset.year;
+    });
+  });
+
+  // Preload other years in background after 3 seconds
+  setTimeout(() => {
+    const otherYears = years.filter(y => y !== startYear);
+    otherYears.forEach(year => {
+      (photoManifest[year] || []).forEach(filename => {
+        const img = new Image();
+        img.src = `photos/${year}/${filename}`;
+      });
+    });
+  }, 3000);
 })();
