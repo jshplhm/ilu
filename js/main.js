@@ -14,49 +14,8 @@ let currentPhotos = [];
 let resortTimer   = null;
 let lastHearted   = null;
 let isAnimating   = false;
-let isSliding     = false;
 
-const gallery  = document.getElementById('gallery');
-const mainEl   = document.querySelector('main');
-
-// ── Slider DOM setup ───────────────────
-// We wrap gallery in a viewport, with a track that holds 3 panels:
-// [prev year] [current year] [next year]
-// The track sits at -100vw (showing center panel) at rest.
-let sliderTrack   = null;
-let prevPanel     = null;
-let curPanel      = null;
-let nextPanel     = null;
-
-function setupSlider() {
-  // Replace gallery with slider structure
-  mainEl.innerHTML = '';
-
-  const viewport = document.createElement('div');
-  viewport.className = 'slider-viewport';
-
-  sliderTrack = document.createElement('div');
-  sliderTrack.className = 'slider-track';
-
-  prevPanel = document.createElement('div');
-  prevPanel.className = 'slider-panel';
-  curPanel  = document.createElement('div');
-  curPanel.className = 'slider-panel';
-  nextPanel = document.createElement('div');
-  nextPanel.className = 'slider-panel';
-
-  sliderTrack.appendChild(prevPanel);
-  sliderTrack.appendChild(curPanel);
-  sliderTrack.appendChild(nextPanel);
-  viewport.appendChild(sliderTrack);
-  mainEl.appendChild(viewport);
-
-  // Heart total lives after the viewport
-  const total = document.createElement('div');
-  total.id = 'heartTotal';
-  total.className = 'heart-total';
-  mainEl.appendChild(total);
-}
+const gallery = document.getElementById('gallery');
 
 // ── Column count — 4 / 3 / 2 ──────────
 function numCols() {
@@ -135,8 +94,14 @@ function updateTotalHearts() {
   YEARS.forEach(year => {
     Object.values(localGet(year)).forEach(count => { total += count; });
   });
-  const el = document.getElementById('heartTotal');
-  if (el) el.textContent = total > 0 ? `♥ ${total.toLocaleString()}` : '';
+  let el = document.getElementById('heartTotal');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'heartTotal';
+    el.className = 'heart-total';
+    document.querySelector('main').appendChild(el);
+  }
+  el.textContent = total > 0 ? `♥ ${total.toLocaleString()}` : '';
 }
 
 // ── Load manifest ──────────────────────
@@ -147,49 +112,26 @@ async function loadManifest() {
   } catch(e) { photoManifest = {}; }
 }
 
-// ── Build a gallery panel ──────────────
-function buildPanel(panel, year) {
-  panel.innerHTML = '';
-  panel.dataset.year = year;
-
-  const photos = sortByHearts(photoManifest[year] || [], year);
-
-  if (!photos.length) {
-    const msg = document.createElement('p');
-    msg.className = 'gallery-message';
-    msg.textContent = 'photos coming soon ✦';
-    panel.appendChild(msg);
-    return;
-  }
-
-  const galleryDiv = document.createElement('div');
-  galleryDiv.className = 'gallery';
-
-  const n    = numCols();
+// ── Create column containers ───────────
+function createCols(n) {
   const cols = [];
   for (let i = 0; i < n; i++) {
     const col = document.createElement('div');
     col.className = 'gallery-col';
-    galleryDiv.appendChild(col);
+    gallery.appendChild(col);
     cols.push(col);
   }
-
-  photos.forEach((filename, i) => {
-    cols[i % n].appendChild(makeItem(filename, year));
-  });
-
-  panel.appendChild(galleryDiv);
-  if (panel === curPanel) updateViewportHeight();
+  return cols;
 }
 
 // ── Make a photo card ──────────────────
-function makeItem(filename, year) {
+function makeItem(filename) {
   const item = document.createElement('div');
   item.className = 'gallery-item';
   item.dataset.filename = filename;
 
   const img = document.createElement('img');
-  img.src      = `photos/${year}/${filename}`;
+  img.src      = `photos/${currentYear}/${filename}`;
   img.alt      = '';
   img.loading  = 'lazy';
   img.decoding = 'async';
@@ -202,28 +144,26 @@ function makeItem(filename, year) {
 
   const badge = document.createElement('div');
   badge.className = 'heart-badge';
-  const count = getCount(year, filename);
+  const count = getCount(currentYear, filename);
   badge.innerHTML = `<span class="heart-badge-icon">♥</span><span class="badge-count">${count}</span>`;
   if (count > 0) badge.classList.add('visible');
 
   item.addEventListener('click', () => {
-    if (isAnimating || isSliding) return;
+    if (isAnimating) return;
 
     item.classList.remove('popping');
     void item.offsetWidth;
     item.classList.add('popping');
     item.addEventListener('animationend', () => item.classList.remove('popping'), { once: true });
 
-    const newCount = addHeart(year, filename);
+    const newCount = addHeart(currentYear, filename);
     badge.querySelector('.badge-count').textContent = newCount;
     badge.classList.add('visible');
     updateTotalHearts();
 
-    if (year === currentYear) {
-      lastHearted = filename;
-      clearTimeout(resortTimer);
-      resortTimer = setTimeout(() => flipResort(), 2000);
-    }
+    lastHearted = filename;
+    clearTimeout(resortTimer);
+    resortTimer = setTimeout(() => flipResort(), 2000);
   });
 
   item.appendChild(img);
@@ -231,12 +171,28 @@ function makeItem(filename, year) {
   return item;
 }
 
-// ── FLIP resort (current panel only) ───
-function flipResort() {
-  const galleryDiv = curPanel.querySelector('.gallery');
-  if (!galleryDiv) return;
+// ── Build gallery ──────────────────────
+function buildGallery(photos) {
+  gallery.innerHTML = '';
 
-  const items = [...galleryDiv.querySelectorAll('.gallery-item')];
+  if (!photos.length) {
+    const msg = document.createElement('p');
+    msg.className = 'gallery-message';
+    msg.textContent = 'photos coming soon ✦';
+    gallery.appendChild(msg);
+    return;
+  }
+
+  const n    = numCols();
+  const cols = createCols(n);
+  photos.forEach((filename, i) => {
+    cols[i % n].appendChild(makeItem(filename));
+  });
+}
+
+// ── FLIP resort ────────────────────────
+function flipResort() {
+  const items = [...gallery.querySelectorAll('.gallery-item')];
   if (items.length < 2) return;
 
   const newOrder = sortByHearts(currentPhotos, currentYear);
@@ -251,22 +207,15 @@ function flipResort() {
     firstRects.set(item.dataset.filename, item.getBoundingClientRect());
   });
 
-  // Rebuild columns
-  galleryDiv.innerHTML = '';
-  const n = numCols();
-  const cols = [];
-  for (let i = 0; i < n; i++) {
-    const col = document.createElement('div');
-    col.className = 'gallery-col';
-    galleryDiv.appendChild(col);
-    cols.push(col);
-  }
+  gallery.innerHTML = '';
+  const n    = numCols();
+  const cols = createCols(n);
   currentPhotos.forEach((filename, i) => {
     const el = items.find(el => el.dataset.filename === filename);
     if (el) cols[i % n].appendChild(el);
   });
 
-  galleryDiv.offsetHeight;
+  gallery.offsetHeight;
 
   const movers = [];
   items.forEach(item => {
@@ -299,84 +248,19 @@ function flipResort() {
   }));
 }
 
-// ── Load adjacent panels ───────────────
-function loadAdjacentPanels(year) {
-  const idx  = YEARS.indexOf(year);
-  const prev = YEARS[idx - 1] || null; // newer
-  const next = YEARS[idx + 1] || null; // older
-
-  if (prev) buildPanel(prevPanel, prev);
-  else prevPanel.innerHTML = '';
-
-  if (next) buildPanel(nextPanel, next);
-  else nextPanel.innerHTML = '';
-}
-
-// ── Update viewport height to match current panel ──
-function updateViewportHeight() {
-  const viewport = document.querySelector('.slider-viewport');
-  if (viewport) viewport.style.height = curPanel.scrollHeight + 'px';
-}
-
-function watchPanelHeight() {
-  const viewport = document.querySelector('.slider-viewport');
-  if (!viewport) return;
-  if (window._panelObserver) window._panelObserver.disconnect();
-  window._panelObserver = new ResizeObserver(() => {
-    viewport.style.height = curPanel.scrollHeight + 'px';
-  });
-  window._panelObserver.observe(curPanel);
-  // Also observe all images in curPanel so height updates as they load
-  curPanel.querySelectorAll('img').forEach(img => {
-    window._panelObserver.observe(img);
-  });
-}
-
 // ── Show year ──────────────────────────
-function showYear(year, pushState = true, swipeDir = 0) {
-  const fromSwipe = swipeDir !== 0;
-  currentYear   = String(year);
-  currentPhotos = sortByHearts(photoManifest[currentYear] || [], currentYear);
-
+function showYear(year, pushState = true) {
+  currentYear = String(year);
   document.querySelectorAll('.year-nav a').forEach(a => {
     a.classList.toggle('active', a.dataset.year === currentYear);
   });
-
-  if (!fromSwipe) {
-    buildPanel(curPanel, currentYear);
-    sliderTrack.style.transition = 'none';
-    sliderTrack.style.transform  = 'translateX(-100vw)';
-  } else {
-    // Rotate panels based on explicit direction
-    // swipeDir > 0 = swiped left (older year), swipeDir < 0 = swiped right (newer year)
-    if (swipeDir > 0) {
-      const old = prevPanel;
-      prevPanel = curPanel;
-      curPanel  = nextPanel;
-      nextPanel = old;
-    } else {
-      const old = nextPanel;
-      nextPanel = curPanel;
-      curPanel  = prevPanel;
-      prevPanel = old;
-    }
-    sliderTrack.innerHTML = '';
-    sliderTrack.appendChild(prevPanel);
-    sliderTrack.appendChild(curPanel);
-    sliderTrack.appendChild(nextPanel);
-    sliderTrack.style.transition = 'none';
-    sliderTrack.style.transform  = 'translateX(-100vw)';
-  }
-
-  loadAdjacentPanels(currentYear);
+  currentPhotos = sortByHearts(photoManifest[currentYear] || [], currentYear);
+  buildGallery(currentPhotos);
   updateTotalHearts();
-  updateViewportHeight();
-  watchPanelHeight();
-
   if (pushState) {
     window.history.pushState({ year: currentYear }, '', '/' + currentYear);
   }
-  if (!fromSwipe) window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ── Year nav clicks ────────────────────
@@ -386,85 +270,6 @@ document.querySelectorAll('.year-nav a').forEach(a => {
     if (a.dataset.year !== currentYear) showYear(a.dataset.year);
   });
 });
-
-// ── Page swipe — track follows finger ──
-let swipeStartX   = 0;
-let swipeStartY   = 0;
-let swipeCurrentX = 0;
-let swipeAxisLocked = null;
-let swipeActive   = false;
-
-document.addEventListener('touchstart', e => {
-  if (e.touches.length > 1 || isAnimating) return;
-  swipeStartX    = e.touches[0].clientX;
-  swipeStartY    = e.touches[0].clientY;
-  swipeCurrentX  = swipeStartX;
-  swipeAxisLocked = null;
-  swipeActive    = false;
-  sliderTrack.style.transition = 'none';
-}, { passive: true });
-
-document.addEventListener('touchmove', e => {
-  if (e.touches.length > 1 || isAnimating) return;
-  swipeCurrentX = e.touches[0].clientX;
-  const dx = swipeCurrentX - swipeStartX;
-  const dy = e.touches[0].clientY - swipeStartY;
-
-  if (!swipeAxisLocked) {
-    if (Math.abs(dx) > Math.abs(dy) + 8)      swipeAxisLocked = 'h';
-    else if (Math.abs(dy) > Math.abs(dx) + 8) swipeAxisLocked = 'v';
-    else return;
-  }
-
-  // Once horizontal — block vertical scroll for this gesture
-  if (swipeAxisLocked === 'h') e.preventDefault();
-  else return;
-
-  const idx     = YEARS.indexOf(currentYear);
-  const atLeft  = idx === 0 && dx > 0;
-  const atRight = idx === YEARS.length - 1 && dx < 0;
-
-  const resistance = (atLeft || atRight) ? 0.15 : 1;
-  const offset = -window.innerWidth + (dx * resistance);
-
-  swipeActive = true;
-  sliderTrack.style.transform = `translateX(${offset}px)`;
-}, { passive: false });
-
-document.addEventListener('touchend', () => {
-  if (!swipeActive || isAnimating) { swipeActive = false; return; }
-  swipeActive = false;
-
-  const dx        = swipeCurrentX - swipeStartX;
-  const threshold = window.innerWidth * 0.25;
-  const idx       = YEARS.indexOf(currentYear);
-
-  if (dx < -threshold && idx < YEARS.length - 1) {
-    // Swipe left → older year (next panel)
-    isSliding = true;
-    sliderTrack.style.transition = 'transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-    sliderTrack.style.transform  = 'translateX(-200vw)';
-    sliderTrack.addEventListener('transitionend', () => {
-      isSliding = false;
-      showYear(YEARS[idx + 1], true, 1); // swipe left → older
-    }, { once: true });
-
-  } else if (dx > threshold && idx > 0) {
-    // Swipe right → newer year (prev panel)
-    isSliding = true;
-    sliderTrack.style.transition = 'transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-    sliderTrack.style.transform  = 'translateX(0)';
-    sliderTrack.addEventListener('transitionend', () => {
-      isSliding = false;
-      showYear(YEARS[idx - 1], true, -1); // swipe right → newer
-    }, { once: true });
-
-  } else {
-    // Snap back
-    sliderTrack.style.transition = 'transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-    sliderTrack.style.transform  = 'translateX(-100vw)';
-  }
-}, { passive: true });
 
 // ── Browser back/forward ───────────────
 window.addEventListener('popstate', e => {
@@ -477,22 +282,21 @@ let resizeTimer;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
-    showYear(currentYear, false);
+    const newN     = numCols();
+    const currentN = gallery.querySelectorAll('.gallery-col').length;
+    if (newN !== currentN) buildGallery(currentPhotos);
   }, 150);
 });
 
 // ── Init ───────────────────────────────
 (async () => {
-  setupSlider();
   await Promise.all([loadManifest(), firebaseLoadAll()]);
-
   const def  = YEARS.find(y => (photoManifest[y] || []).length > 0) || '2026';
   const path = window.location.pathname.replace('/', '');
   const startYear = YEARS.includes(path) ? path : def;
-
   showYear(startYear, false);
 
-  // Preload other years in background
+  // Preload other years in background after 3 seconds
   setTimeout(() => {
     YEARS.filter(y => y !== startYear).forEach(year => {
       (photoManifest[year] || []).forEach(filename => {
