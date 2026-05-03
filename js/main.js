@@ -104,7 +104,8 @@ function updateTotalHearts() {
     document.querySelector('main').appendChild(el);
     el.addEventListener('click', openHiddenPage);
   }
-  el.textContent = total > 0 ? `♥ ${total.toLocaleString()}` : '';
+  el.textContent = total > 0 ? `\u2665 ${total.toLocaleString()}` : '';
+  el.style.cursor = 'pointer';
 }
 
 // ── Hidden page heart counter ──────────
@@ -268,6 +269,7 @@ function flipResort() {
 // ── Hidden page ────────────────────────
 function openHiddenPage() {
   hiddenMode = true;
+  document.querySelectorAll('.year-nav a').forEach(a => a.classList.remove('active'));
   document.body.classList.add('hidden-mode');
   window.history.pushState({ hidden: true }, '', '/us');
   window.scrollTo({ top: 0, behavior: 'smooth' });
