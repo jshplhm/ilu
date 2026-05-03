@@ -296,13 +296,17 @@ function flipResort() {
     firstRects.set(item.dataset.filename, item.getBoundingClientRect());
   });
 
+  const scrollY = window.scrollY;
+
   gallery.innerHTML = '';
   const n    = numCols();
   const cols = createCols(n, gallery);
   currentPhotos.forEach(filename => {
-  const el = items.find(el => el.dataset.filename === filename);
-  if (el) shortestCol(cols).appendChild(el);
+    const el = items.find(el => el.dataset.filename === filename);
+    if (el) shortestCol(cols).appendChild(el);
   });
+
+  window.scrollTo({ top: scrollY, behavior: 'instant' });
 
   gallery.offsetHeight;
 
@@ -386,9 +390,10 @@ function closeHiddenPage() {
 }
 
 // ── Show year ──────────────────────────
-function showYear(year, pushState = true) {
+function showYear(year, pushState = true, showHeader = false) {
   hiddenMode  = false;
   document.body.classList.remove('hidden-mode');
+  document.querySelector('header').classList.toggle('hidden', !showHeader); // ← add this
   currentYear = String(year);
 
   // Restore main structure if hidden page wiped it
@@ -467,7 +472,8 @@ window.addEventListener('resize', () => {
   const path = window.location.pathname.replace('/', '');
 
   const startYear = YEARS.includes(path) ? path : def;
-  showYear(startYear, false);
+  const isRoot = !YEARS.includes(path);
+  showYear(startYear, false, isRoot);
 
   // Preload other years in background
   setTimeout(() => {
