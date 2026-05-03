@@ -276,3 +276,14 @@ body.hidden-mode .gallery-item {
 body.hidden-mode .heart-badge {
   background: rgba(255,255,255,0.15);
 }
+
+/* ── Total heart counter ── */
+.heart-total {
+  text-align: center;
+  padding: 0 0 48px;
+  color: #ccc;
+  font-size: 0.75rem;
+  font-family: var(--font);
+  letter-spacing: 0.06em;
+  font-weight: 500;
+}
