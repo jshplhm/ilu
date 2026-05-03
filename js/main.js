@@ -262,7 +262,8 @@ function showYear(year, pushState = true) {
   }
   if (pushState) {
     // Switching years — scroll to gallery, skip the message
-    const galleryTop = gallery.getBoundingClientRect().top + window.scrollY;
+    const navHeight  = document.querySelector('nav').offsetHeight;
+    const galleryTop = gallery.getBoundingClientRect().top + window.scrollY - navHeight;
     window.scrollTo({ top: galleryTop, behavior: 'smooth' });
   } else {
     // Initial load — show from top
