@@ -312,7 +312,7 @@ function loadAdjacentPanels(year) {
 }
 
 // ── Show year ──────────────────────────
-function showYear(year, pushState = true) {
+function showYear(year, pushState = true, fromSwipe = false) {
   currentYear   = String(year);
   currentPhotos = sortByHearts(photoManifest[currentYear] || [], currentYear);
 
@@ -320,19 +320,41 @@ function showYear(year, pushState = true) {
     a.classList.toggle('active', a.dataset.year === currentYear);
   });
 
-  buildPanel(curPanel, currentYear);
+  if (!fromSwipe) {
+    // Full rebuild — nav click or initial load
+    buildPanel(curPanel, currentYear);
+    sliderTrack.style.transition = 'none';
+    sliderTrack.style.transform  = 'translateX(-100vw)';
+  } else {
+    // After swipe — panels already in place, just rotate them
+    // The panel that slid into view becomes curPanel
+    // No rebuild needed, no flash
+    const dir = YEARS.indexOf(year) > YEARS.indexOf(currentYear === year ? year : currentYear) ? 1 : -1;
+    const temp = dir > 0 ? nextPanel : prevPanel;
+    if (dir > 0) {
+      prevPanel = curPanel;
+      curPanel  = nextPanel;
+      nextPanel = temp;
+    } else {
+      nextPanel = curPanel;
+      curPanel  = prevPanel;
+      prevPanel = temp;
+    }
+    sliderTrack.innerHTML = '';
+    sliderTrack.appendChild(prevPanel);
+    sliderTrack.appendChild(curPanel);
+    sliderTrack.appendChild(nextPanel);
+    sliderTrack.style.transition = 'none';
+    sliderTrack.style.transform  = 'translateX(-100vw)';
+  }
+
   loadAdjacentPanels(currentYear);
-
-  // Reset track position instantly
-  sliderTrack.style.transition = 'none';
-  sliderTrack.style.transform  = 'translateX(-100vw)';
-
   updateTotalHearts();
 
   if (pushState) {
     window.history.pushState({ year: currentYear }, '', '/' + currentYear);
   }
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (!fromSwipe) window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ── Year nav clicks ────────────────────
@@ -400,7 +422,7 @@ document.addEventListener('touchend', () => {
     sliderTrack.style.transform  = 'translateX(-200vw)';
     sliderTrack.addEventListener('transitionend', () => {
       isSliding = false;
-      showYear(YEARS[idx + 1]);
+      showYear(YEARS[idx + 1], true, true);
     }, { once: true });
 
   } else if (dx > threshold && idx > 0) {
@@ -410,7 +432,7 @@ document.addEventListener('touchend', () => {
     sliderTrack.style.transform  = 'translateX(0)';
     sliderTrack.addEventListener('transitionend', () => {
       isSliding = false;
-      showYear(YEARS[idx - 1]);
+      showYear(YEARS[idx - 1], true, true);
     }, { once: true });
 
   } else {
