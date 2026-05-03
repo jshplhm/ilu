@@ -243,6 +243,9 @@ function tryPlace() {
 
     lastPlaced = Date.now() + delay;
     nextPlace++;
+    if (nextPlace === items.length) {
+    updateTotalHearts();
+    } 
   }
 }
 
