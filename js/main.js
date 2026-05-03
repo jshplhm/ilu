@@ -326,6 +326,10 @@ function watchPanelHeight() {
     viewport.style.height = curPanel.scrollHeight + 'px';
   });
   window._panelObserver.observe(curPanel);
+  // Also observe all images in curPanel so height updates as they load
+  curPanel.querySelectorAll('img').forEach(img => {
+    window._panelObserver.observe(img);
+  });
 }
 
 // ── Show year ──────────────────────────
