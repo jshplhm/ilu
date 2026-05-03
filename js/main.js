@@ -136,6 +136,13 @@ function createCols(n, container) {
   return cols;
 }
 
+// ── Shortest column (by rendered height) ──
+function shortestCol(cols) {
+  return cols.reduce((min, col) =>
+    col.offsetHeight < min.offsetHeight ? col : min
+  );
+}
+
 // ── Make a photo card ──────────────────
 function makeItem(filename, year, container) {
   const item = document.createElement('div');
@@ -203,8 +210,8 @@ function buildGallery(photos) {
 
   const n    = numCols();
   const cols = createCols(n, gallery);
-  photos.forEach((filename, i) => {
-    cols[i % n].appendChild(makeItem(filename, currentYear, gallery));
+  photos.forEach(filename => {
+  shortestCol(cols).appendChild(makeItem(filename, currentYear, gallery));
   });
 }
 
@@ -228,9 +235,9 @@ function flipResort() {
   gallery.innerHTML = '';
   const n    = numCols();
   const cols = createCols(n, gallery);
-  currentPhotos.forEach((filename, i) => {
-    const el = items.find(el => el.dataset.filename === filename);
-    if (el) cols[i % n].appendChild(el);
+  currentPhotos.forEach(filename => {
+  const el = items.find(el => el.dataset.filename === filename);
+  if (el) shortestCol(cols).appendChild(el);
   });
 
   gallery.offsetHeight;
