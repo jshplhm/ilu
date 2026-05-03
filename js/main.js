@@ -88,6 +88,24 @@ function sortByHearts(arr, year) {
   return [...arr].sort((a, b) => getCount(year, b) - getCount(year, a));
 }
 
+// ── Total hearts across all years ──────
+function updateTotalHearts() {
+  const years = ['2022', '2023', '2024', '2025', '2026'];
+  let total = 0;
+  years.forEach(year => {
+    const hearts = localGet(year);
+    Object.values(hearts).forEach(count => { total += count; });
+  });
+  let el = document.getElementById('heartTotal');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'heartTotal';
+    el.className = 'heart-total';
+    document.querySelector('main').appendChild(el);
+  }
+  el.textContent = total > 0 ? `♥ ${total.toLocaleString()} moments loved` : '';
+}
+
 // ── Load manifest ──────────────────────
 async function loadManifest() {
   try {
