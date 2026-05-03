@@ -241,9 +241,9 @@ header {
 
 /* ── Year slider ── */
 .slider-viewport {
-  overflow-x: hidden;
-  overflow-y: visible;
+  overflow: visible;
   width: 100%;
+  clip-path: inset(0 0 0 0);
 }
 
 .slider-track {
