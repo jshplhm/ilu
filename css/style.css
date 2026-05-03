@@ -112,6 +112,14 @@ header {
   min-width: 0;
 }
 
+.gallery-placeholder {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background: #f0f0f0;
+  border-radius: 2px;
+  opacity: 0.4;
+}
+
 /* ─────────────────────────────────────────
    Photo card
 ───────────────────────────────────────── */
