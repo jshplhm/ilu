@@ -210,8 +210,8 @@ function buildGallery(photos) {
 
   const n    = numCols();
   const cols = createCols(n, gallery);
-  photos.forEach(filename => {
-  shortestCol(cols).appendChild(makeItem(filename, currentYear, gallery));
+  photos.forEach((filename, i) => {
+  cols[i % n].appendChild(makeItem(filename, currentYear, gallery));
   });
 }
 
