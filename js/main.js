@@ -260,7 +260,14 @@ function showYear(year, pushState = true) {
   if (pushState) {
     window.history.pushState({ year: currentYear }, '', '/' + currentYear);
   }
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (pushState) {
+    // Switching years — scroll to gallery, skip the message
+    const galleryTop = gallery.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: galleryTop, behavior: 'smooth' });
+  } else {
+    // Initial load — show from top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 }
 
 // ── Year nav clicks ────────────────────
