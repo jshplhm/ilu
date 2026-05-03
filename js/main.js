@@ -220,27 +220,33 @@ function buildGallery(photos) {
   const ready     = new Array(photos.length).fill(false);
   let   nextPlace = 0;
 
-  function tryPlace() {
-    while (nextPlace < items.length && ready[nextPlace]) {
-      const item = items[nextPlace];
-      const img  = item.querySelector('img');
-      const idx  = shortestColIdx();
+  let nextPlace  = 0;
+let lastPlaced = 0;
+const STAGGER  = 120; // ms between each card appearing
 
-      cols[idx].appendChild(item);
+function tryPlace() {
+  while (nextPlace < items.length && ready[nextPlace]) {
+    const i      = nextPlace;
+    const item   = items[i];
+    const img    = item.querySelector('img');
+    const idx    = shortestColIdx();
+    const delay  = Math.max(0, lastPlaced + STAGGER - Date.now());
 
-      // Use real aspect ratio to track column height accurately
-      const colW = cols[idx].offsetWidth;
-      const ar   = img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1.33;
-      colHeights[idx] += colW * ar + 8; // 8 = --gap
+    cols[idx].appendChild(item);
+    const colW = cols[idx].offsetWidth;
+    const ar   = img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1.33;
+    colHeights[idx] += colW * ar + 8;
 
-      // Fade in after browser has painted the item into the DOM
+    setTimeout(() => {
       requestAnimationFrame(() => requestAnimationFrame(() => {
         item.classList.add('visible');
       }));
+    }, delay);
 
-      nextPlace++;
-    }
+    lastPlaced = Date.now() + delay;
+    nextPlace++;
   }
+}
 
   items.forEach((item, i) => {
     const img  = item.querySelector('img');
