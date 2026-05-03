@@ -268,7 +268,7 @@ function tryPlace() {
   const maxH = Math.max(...cols.map(c => c.offsetHeight));
   cols.forEach(col => {
     const remaining = maxH - col.offsetHeight;
-    if (remaining > 50) {
+    if (remaining > 0) {
       const ph = document.createElement('div');
       ph.className = 'gallery-placeholder';
       ph.style.height = (remaining - 8) + 'px'; // subtract one gap
@@ -414,10 +414,7 @@ function showYear(year, pushState = true, showHeader = false) {
     window.history.pushState({ year: currentYear }, '', '/' + currentYear);
   }
 
-  const nav    = document.querySelector('nav');
-  const header = document.querySelector('header');
-  const target = header.offsetTop + header.offsetHeight - nav.offsetHeight;
-  window.scrollTo({ top: showHeader ? 0 : target, behavior: 'instant' });
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 // ── Year nav clicks ────────────────────
