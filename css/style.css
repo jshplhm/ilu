@@ -118,7 +118,7 @@ header {
 .gallery-item {
   opacity: 0;
   transform: translateY(10px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition: opacity 0.8s ease, transform 0.8s ease;
   position: relative;
   overflow: hidden;
   background: #f0f0f0;
