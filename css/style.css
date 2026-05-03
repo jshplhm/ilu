@@ -241,7 +241,8 @@ header {
 
 /* ── Year slider ── */
 .slider-viewport {
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
   width: 100%;
 }
 
