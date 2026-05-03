@@ -267,9 +267,11 @@ function tryPlace() {
   setTimeout(() => {
   const maxH = Math.max(...cols.map(c => c.offsetHeight));
   cols.forEach(col => {
-    while (col.offsetHeight < maxH - 50) {
+    const remaining = maxH - col.offsetHeight;
+    if (remaining > 50) {
       const ph = document.createElement('div');
       ph.className = 'gallery-placeholder';
+      ph.style.height = (remaining - 8) + 'px'; // subtract one gap
       col.appendChild(ph);
     }
   });
