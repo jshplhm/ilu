@@ -295,7 +295,7 @@ window.addEventListener('resize', () => {
   // Update URL when switching years
   document.querySelectorAll('.year-nav a').forEach(a => {
     a.addEventListener('click', () => {
-      window.location.history.pushState({}, '', '/' + a.dataset.year);
+      window.history.pushState({}, '', '/' + a.dataset.year);
     });
   });
 
