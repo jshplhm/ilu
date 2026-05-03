@@ -102,10 +102,10 @@ function updateTotalHearts() {
     el.id = 'heartTotal';
     el.className = 'heart-total';
     document.querySelector('main').appendChild(el);
-    el.addEventListener('click', openHiddenPage);
   }
-  el.textContent = total > 0 ? `\u2665 ${total.toLocaleString()}` : '';
-  el.style.cursor = 'pointer';
+  el.innerHTML = total > 0 ? `<span id="heartTotalInner" style="cursor:default">\u2665 ${total.toLocaleString()}</span>` : '';
+  const inner = document.getElementById('heartTotalInner');
+  if (inner) inner.addEventListener('click', openHiddenPage);
 }
 
 // ── Hidden page heart counter ──────────
@@ -351,8 +351,20 @@ function showYear(year, pushState = true) {
 document.querySelectorAll('.year-nav a').forEach(a => {
   a.addEventListener('click', e => {
     e.preventDefault();
-    showYear(a.dataset.year);
+    if (hiddenMode || a.dataset.year !== currentYear) {
+      showYear(a.dataset.year);
+    } else {
+      // Same year — scroll to gallery top
+      const navHeight  = document.querySelector('nav').offsetHeight;
+      const galleryTop = gallery.getBoundingClientRect().top + window.scrollY - navHeight;
+      window.scrollTo({ top: galleryTop, behavior: 'smooth' });
+    }
   });
+});
+
+// ── Logo click ─────────────────────────
+document.getElementById('logoLink').addEventListener('click', () => {
+  showYear(YEARS[0]);
 });
 
 // ── Browser back/forward ───────────────
