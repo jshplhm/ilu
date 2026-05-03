@@ -262,6 +262,19 @@ function tryPlace() {
       img.addEventListener('error', () => { ready[i] = true; item.style.display = 'none'; tryPlace(); }, { once: true });
     }
   });
+
+  // After a short delay, pad shorter columns with ghost cards
+  setTimeout(() => {
+  const maxH = Math.max(...cols.map(c => c.offsetHeight));
+  cols.forEach(col => {
+    while (col.offsetHeight < maxH - 50) {
+      const ph = document.createElement('div');
+      ph.className = 'gallery-placeholder';
+      col.appendChild(ph);
+    }
+  });
+  }, STAGGER * photos.length + 600);
+   
 }
 
 // ── FLIP resort ────────────────────────
