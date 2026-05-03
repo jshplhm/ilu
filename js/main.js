@@ -218,11 +218,9 @@ function buildGallery(photos) {
   // Build all items with eager loading so all fetches start in parallel
   const items     = photos.map(f => makeItem(f, currentYear));
   const ready     = new Array(photos.length).fill(false);
-  let   nextPlace = 0;
-
   let nextPlace  = 0;
-let lastPlaced = 0;
-const STAGGER  = 120; // ms between each card appearing
+  let lastPlaced = 0;
+  const STAGGER  = 120; // ms between each card appearing
 
 function tryPlace() {
   while (nextPlace < items.length && ready[nextPlace]) {
