@@ -8,7 +8,7 @@
 }
 
 :root {
-  --font: 'Nunito', system-ui, sans-serif;
+  --font: 'DM Sans', system-ui, sans-serif;
   --black: #0a0a0a;
   --white: #ffffff;
   --mid: #888;
@@ -35,7 +35,7 @@ nav {
   padding: 22px 40px;
   position: sticky;
   top: 0;
-  background: white;
+  background: var(--white);
   z-index: 100;
 }
 
@@ -69,7 +69,7 @@ header {
 
 .message {
   font-size: clamp(1.75rem, 4.5vw, 3.2rem);
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1.18;
   letter-spacing: -0.02em;
   margin-bottom: 28px;
@@ -77,7 +77,7 @@ header {
 
 .signature {
   font-size: clamp(1.3rem, 3vw, 2.2rem);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.01em;
 }
 
@@ -121,7 +121,7 @@ header {
   background: #f0f0f0;
   border-radius: 2px;
   cursor: pointer;
-  touch-action: manipulation;  
+
   /* Kill ALL browser selection/highlight behavior */
   -webkit-tap-highlight-color: rgba(0,0,0,0);
   -webkit-touch-callout: none;
@@ -212,29 +212,67 @@ header {
   .gallery { --cols: 2; }
 }
 
-/* Remove loading text */
-.gallery-loading { display: none; }
-
-/* Photos start invisible and slightly below */
-.gallery-item {
-  opacity: 0;
-  transform: translateY(16px);
+/* ── Year slider ── */
+.slider-viewport {
+  overflow: hidden;
+  width: 100%;
 }
 
-/* Each photo fades+slides up when its image loads */
-.gallery-item.loaded {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 1.2s ease, transform 1.2s ease;
+.slider-track {
+  display: flex;
+  width: 300vw;
+  transform: translateX(-100vw);
+  will-change: transform;
 }
 
-/* ── Total heart counter ── */
-.heart-total {
+.slider-panel {
+  width: 100vw;
+  min-width: 100vw;
+  overflow: visible;
+}
+
+/* ── Hidden easter egg page ── */
+body.hidden-mode {
+  background: #0a0a0a;
+  color: #fff;
+  transition: background 0.6s ease, color 0.6s ease;
+}
+
+body.hidden-mode nav {
+  background: #0a0a0a;
+  transition: background 0.6s ease;
+}
+
+body.hidden-mode .year-nav a {
+  color: #fff;
+}
+
+body.hidden-mode .year-nav a.active {
+  border-bottom-color: #fff;
+}
+
+body.hidden-mode header {
+  display: none;
+}
+
+.hidden-message {
   text-align: center;
-  padding: 0 0 48px;
-  color: #ccc;
-  font-size: 0.75rem;
+  font-size: clamp(1.4rem, 3.5vw, 2.4rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  padding: 64px 24px 52px;
+  color: rgba(255,255,255,0.9);
   font-family: var(--font);
-  letter-spacing: 0.06em;
-  font-weight: 500;
+}
+
+.us-heart-total {
+  color: rgba(255,255,255,0.25);
+}
+
+body.hidden-mode .gallery-item {
+  background: #1a1a1a;
+}
+
+body.hidden-mode .heart-badge {
+  background: rgba(255,255,255,0.15);
 }
