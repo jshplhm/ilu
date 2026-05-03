@@ -103,7 +103,7 @@ function updateTotalHearts() {
     el.className = 'heart-total';
     document.querySelector('main').appendChild(el);
   }
-  el.textContent = total > 0 ? `♥ ${total.toLocaleString()} moments loved` : '';
+  el.textContent = total > 0 ? `♥ ${total.toLocaleString()}` : '';
 }
 
 // ── Load manifest ──────────────────────
