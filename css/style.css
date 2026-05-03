@@ -33,6 +33,10 @@ nav {
   align-items: baseline;
   gap: 28px;
   padding: 22px 40px;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 100;
 }
 
 .logo { font-size: 1.4rem; font-weight: 900; letter-spacing: -0.03em; }
