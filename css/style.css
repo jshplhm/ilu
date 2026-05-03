@@ -114,9 +114,9 @@ header {
 
 .gallery-placeholder {
   width: 100%;
-  background: #f0f0f0;
+  background: #e0e0e0;
   border-radius: 2px;
-  opacity: 0.4;
+  opacity: 0.6;
 }
 
 /* ─────────────────────────────────────────
