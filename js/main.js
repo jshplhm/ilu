@@ -267,15 +267,15 @@ window.addEventListener('resize', () => {
   const years = ['2026', '2025', '2024', '2023', '2022'];
   const def = years.find(y => (photoManifest[y] || []).length > 0) || '2026';
 
-  // Load year from URL hash if present (e.g. ilü.com/#2024)
-  const hash = window.location.hash.replace('#', '');
-  const startYear = years.includes(hash) ? hash : def;
+  // Read year from clean URL path e.g. ilü.com/2025
+  const path = window.location.pathname.replace('/', '');
+  const startYear = years.includes(path) ? path : def;
   showYear(startYear);
 
-  // Update URL hash when switching years
+  // Update URL when switching years
   document.querySelectorAll('.year-nav a').forEach(a => {
     a.addEventListener('click', () => {
-      window.location.hash = a.dataset.year;
+      window.location.history.pushState({}, '', '/' + a.dataset.year);
     });
   });
 
@@ -283,7 +283,7 @@ window.addEventListener('resize', () => {
   setTimeout(() => {
     const otherYears = years.filter(y => y !== startYear);
     otherYears.forEach(year => {
-      (photoManifest[year] || []).forEach(filename => {
+      (photoManifest[year] || []).length > 0 && (photoManifest[year] || []).forEach(filename => {
         const img = new Image();
         img.src = `photos/${year}/${filename}`;
       });
