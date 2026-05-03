@@ -318,6 +318,16 @@ function updateViewportHeight() {
   if (viewport) viewport.style.height = curPanel.scrollHeight + 'px';
 }
 
+function watchPanelHeight() {
+  const viewport = document.querySelector('.slider-viewport');
+  if (!viewport) return;
+  if (window._panelObserver) window._panelObserver.disconnect();
+  window._panelObserver = new ResizeObserver(() => {
+    viewport.style.height = curPanel.scrollHeight + 'px';
+  });
+  window._panelObserver.observe(curPanel);
+}
+
 // ── Show year ──────────────────────────
 function showYear(year, pushState = true, swipeDir = 0) {
   const fromSwipe = swipeDir !== 0;
@@ -357,6 +367,7 @@ function showYear(year, pushState = true, swipeDir = 0) {
   loadAdjacentPanels(currentYear);
   updateTotalHearts();
   updateViewportHeight();
+  watchPanelHeight();
 
   if (pushState) {
     window.history.pushState({ year: currentYear }, '', '/' + currentYear);
