@@ -14,6 +14,7 @@ let currentPhotos = [];
 let resortTimer   = null;
 let lastHearted   = null;
 let isAnimating   = false;
+let hiddenMode    = false;
 
 const gallery = document.getElementById('gallery');
 
@@ -54,6 +55,7 @@ async function firebaseLoadAll() {
       });
     } else {
       YEARS.forEach(y => localSet(y, {}));
+      localSet('us', {});
     }
   } catch(e) {}
 }
@@ -88,7 +90,7 @@ function sortByHearts(arr, year) {
   return [...arr].sort((a, b) => getCount(year, b) - getCount(year, a));
 }
 
-// ── Total hearts ───────────────────────
+// ── Total hearts (main site only) ──────
 function updateTotalHearts() {
   let total = 0;
   YEARS.forEach(year => {
@@ -100,8 +102,17 @@ function updateTotalHearts() {
     el.id = 'heartTotal';
     el.className = 'heart-total';
     document.querySelector('main').appendChild(el);
+    el.addEventListener('click', openHiddenPage);
   }
   el.textContent = total > 0 ? `♥ ${total.toLocaleString()}` : '';
+}
+
+// ── Hidden page heart counter ──────────
+function updateUsHearts() {
+  let total = 0;
+  Object.values(localGet('us')).forEach(count => { total += count; });
+  const el = document.getElementById('usHeartTotal');
+  if (el) el.textContent = total > 0 ? `♥ ${total.toLocaleString()}` : '';
 }
 
 // ── Load manifest ──────────────────────
@@ -113,25 +124,25 @@ async function loadManifest() {
 }
 
 // ── Create column containers ───────────
-function createCols(n) {
+function createCols(n, container) {
   const cols = [];
   for (let i = 0; i < n; i++) {
     const col = document.createElement('div');
     col.className = 'gallery-col';
-    gallery.appendChild(col);
+    container.appendChild(col);
     cols.push(col);
   }
   return cols;
 }
 
 // ── Make a photo card ──────────────────
-function makeItem(filename) {
+function makeItem(filename, year, container) {
   const item = document.createElement('div');
   item.className = 'gallery-item';
   item.dataset.filename = filename;
 
   const img = document.createElement('img');
-  img.src      = `photos/${currentYear}/${filename}`;
+  img.src      = `photos/${year}/${filename}`;
   img.alt      = '';
   img.loading  = 'lazy';
   img.decoding = 'async';
@@ -144,7 +155,7 @@ function makeItem(filename) {
 
   const badge = document.createElement('div');
   badge.className = 'heart-badge';
-  const count = getCount(currentYear, filename);
+  const count = getCount(year, filename);
   badge.innerHTML = `<span class="heart-badge-icon">♥</span><span class="badge-count">${count}</span>`;
   if (count > 0) badge.classList.add('visible');
 
@@ -156,14 +167,20 @@ function makeItem(filename) {
     item.classList.add('popping');
     item.addEventListener('animationend', () => item.classList.remove('popping'), { once: true });
 
-    const newCount = addHeart(currentYear, filename);
+    const newCount = addHeart(year, filename);
     badge.querySelector('.badge-count').textContent = newCount;
     badge.classList.add('visible');
-    updateTotalHearts();
 
-    lastHearted = filename;
-    clearTimeout(resortTimer);
-    resortTimer = setTimeout(() => flipResort(), 2000);
+    if (year === 'us') {
+      updateUsHearts();
+    } else {
+      updateTotalHearts();
+      if (year === currentYear) {
+        lastHearted = filename;
+        clearTimeout(resortTimer);
+        resortTimer = setTimeout(() => flipResort(), 2000);
+      }
+    }
   });
 
   item.appendChild(img);
@@ -184,9 +201,9 @@ function buildGallery(photos) {
   }
 
   const n    = numCols();
-  const cols = createCols(n);
+  const cols = createCols(n, gallery);
   photos.forEach((filename, i) => {
-    cols[i % n].appendChild(makeItem(filename));
+    cols[i % n].appendChild(makeItem(filename, currentYear, gallery));
   });
 }
 
@@ -209,7 +226,7 @@ function flipResort() {
 
   gallery.innerHTML = '';
   const n    = numCols();
-  const cols = createCols(n);
+  const cols = createCols(n, gallery);
   currentPhotos.forEach((filename, i) => {
     const el = items.find(el => el.dataset.filename === filename);
     if (el) cols[i % n].appendChild(el);
@@ -248,25 +265,83 @@ function flipResort() {
   }));
 }
 
+// ── Hidden page ────────────────────────
+function openHiddenPage() {
+  hiddenMode = true;
+  document.body.classList.add('hidden-mode');
+  window.history.pushState({ hidden: true }, '', '/us');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // Build hidden page content
+  const main = document.querySelector('main');
+  main.innerHTML = '';
+
+  // Message
+  const msg = document.createElement('p');
+  msg.className = 'hidden-message';
+  msg.textContent = 'where it all began.';
+  main.appendChild(msg);
+
+  // Gallery
+  const usGallery = document.createElement('div');
+  usGallery.className = 'gallery';
+  main.appendChild(usGallery);
+
+  const usPhotos = sortByHearts(photoManifest['us'] || [], 'us');
+
+  if (!usPhotos.length) {
+    usGallery.innerHTML = '<p class="gallery-message">photos coming soon ✦</p>';
+  } else {
+    const n    = numCols();
+    const cols = createCols(n, usGallery);
+    usPhotos.forEach((filename, i) => {
+      cols[i % n].appendChild(makeItem(filename, 'us', usGallery));
+    });
+  }
+
+  // Hidden heart counter
+  const counter = document.createElement('div');
+  counter.id = 'usHeartTotal';
+  counter.className = 'heart-total us-heart-total';
+  main.appendChild(counter);
+  updateUsHearts();
+}
+
+function closeHiddenPage() {
+  hiddenMode = false;
+  document.body.classList.remove('hidden-mode');
+  showYear(currentYear || YEARS[0], false);
+}
+
 // ── Show year ──────────────────────────
 function showYear(year, pushState = true) {
+  hiddenMode  = false;
+  document.body.classList.remove('hidden-mode');
   currentYear = String(year);
+
+  // Restore main structure if hidden page wiped it
+  if (!gallery.isConnected) {
+    const main = document.querySelector('main');
+    main.innerHTML = '';
+    main.appendChild(gallery);
+  }
+
   document.querySelectorAll('.year-nav a').forEach(a => {
     a.classList.toggle('active', a.dataset.year === currentYear);
   });
   currentPhotos = sortByHearts(photoManifest[currentYear] || [], currentYear);
   buildGallery(currentPhotos);
   updateTotalHearts();
+
   if (pushState) {
     window.history.pushState({ year: currentYear }, '', '/' + currentYear);
   }
+
+  const navHeight  = document.querySelector('nav').offsetHeight;
+  const galleryTop = gallery.getBoundingClientRect().top + window.scrollY - navHeight;
   if (pushState) {
-    // Switching years — scroll to gallery, skip the message
-    const navHeight  = document.querySelector('nav').offsetHeight;
-    const galleryTop = gallery.getBoundingClientRect().top + window.scrollY - navHeight;
     window.scrollTo({ top: galleryTop, behavior: 'smooth' });
   } else {
-    // Initial load — show from top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
@@ -275,14 +350,18 @@ function showYear(year, pushState = true) {
 document.querySelectorAll('.year-nav a').forEach(a => {
   a.addEventListener('click', e => {
     e.preventDefault();
-    if (a.dataset.year !== currentYear) showYear(a.dataset.year);
+    showYear(a.dataset.year);
   });
 });
 
 // ── Browser back/forward ───────────────
 window.addEventListener('popstate', e => {
-  const year = e.state?.year;
-  if (year && YEARS.includes(year)) showYear(year, false);
+  if (e.state?.hidden) {
+    openHiddenPage();
+  } else {
+    const year = e.state?.year;
+    if (year && YEARS.includes(year)) showYear(year, false);
+  }
 });
 
 // ── Responsive resize ──────────────────
@@ -290,6 +369,7 @@ let resizeTimer;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
+    if (hiddenMode) return;
     const newN     = numCols();
     const currentN = gallery.querySelectorAll('.gallery-col').length;
     if (newN !== currentN) buildGallery(currentPhotos);
@@ -301,12 +381,18 @@ window.addEventListener('resize', () => {
   await Promise.all([loadManifest(), firebaseLoadAll()]);
   const def  = YEARS.find(y => (photoManifest[y] || []).length > 0) || '2026';
   const path = window.location.pathname.replace('/', '');
-  const startYear = YEARS.includes(path) ? path : def;
-  showYear(startYear, false);
 
-  // Preload other years in background after 3 seconds
+  if (path === 'us') {
+    currentYear = def;
+    openHiddenPage();
+  } else {
+    const startYear = YEARS.includes(path) ? path : def;
+    showYear(startYear, false);
+  }
+
+  // Preload other years in background
   setTimeout(() => {
-    YEARS.filter(y => y !== startYear).forEach(year => {
+    YEARS.filter(y => y !== currentYear).forEach(year => {
       (photoManifest[year] || []).forEach(filename => {
         new Image().src = `photos/${year}/${filename}`;
       });
