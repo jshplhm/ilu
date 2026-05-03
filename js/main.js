@@ -55,7 +55,7 @@ async function firebaseLoadAll() {
       });
     } else {
       YEARS.forEach(y => localSet(y, {}));
-      localSet('us', {});
+      localSet('xo', {});
     }
   } catch(e) {}
 }
@@ -111,7 +111,7 @@ function updateTotalHearts() {
 // ── Hidden page heart counter ──────────
 function updateUsHearts() {
   let total = 0;
-  Object.values(localGet('us')).forEach(count => { total += count; });
+  Object.values(localGet('xo')).forEach(count => { total += count; });
   const el = document.getElementById('usHeartTotal');
   if (el) el.textContent = total > 0 ? `♥ ${total.toLocaleString()}` : '';
 }
@@ -172,7 +172,7 @@ function makeItem(filename, year, container) {
     badge.querySelector('.badge-count').textContent = newCount;
     badge.classList.add('visible');
 
-    if (year === 'us') {
+    if (year === 'xo') {
       updateUsHearts();
     } else {
       updateTotalHearts();
@@ -288,7 +288,7 @@ function openHiddenPage() {
   usGallery.className = 'gallery';
   main.appendChild(usGallery);
 
-  const usPhotos = sortByHearts(photoManifest['us'] || [], 'us');
+  const usPhotos = sortByHearts(photoManifest['us'] || [], 'xo');
 
   if (!usPhotos.length) {
     usGallery.innerHTML = '<p class="gallery-message">photos coming soon ✦</p>';
@@ -296,7 +296,7 @@ function openHiddenPage() {
     const n    = numCols();
     const cols = createCols(n, usGallery);
     usPhotos.forEach((filename, i) => {
-      cols[i % n].appendChild(makeItem(filename, 'us', usGallery));
+      cols[i % n].appendChild(makeItem(filename, 'xo', usGallery));
     });
   }
 
@@ -399,13 +399,8 @@ window.addEventListener('resize', () => {
   const def  = YEARS.find(y => (photoManifest[y] || []).length > 0) || '2026';
   const path = window.location.pathname.replace('/', '');
 
-  if (path === 'us') {
-    currentYear = def;
-    openHiddenPage();
-  } else {
-    const startYear = YEARS.includes(path) ? path : def;
-    showYear(startYear, false);
-  }
+  const startYear = YEARS.includes(path) ? path : def;
+  showYear(startYear, false);
 
   // Preload other years in background
   setTimeout(() => {
