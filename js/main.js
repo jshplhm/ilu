@@ -412,7 +412,7 @@ function showYear(year, pushState = true) {
   const nav    = document.querySelector('nav');
   const header = document.querySelector('header');
   const target = header.offsetTop + header.offsetHeight - nav.offsetHeight;
-  window.scrollTo({ top: target, behavior: 'instant' });
+  window.scrollTo({ top: showHeader ? 0 : target, behavior: 'instant' });
 }
 
 // ── Year nav clicks ────────────────────
@@ -434,9 +434,8 @@ document.querySelectorAll('.year-nav a').forEach(a => {
 document.getElementById('logoLink').addEventListener('click', () => {
   hiddenMode = false;
   document.body.classList.remove('hidden-mode');
-  showYear(YEARS[0], false);
+  showYear(YEARS[0], false, true);
   window.history.pushState({ year: YEARS[0] }, '', '/');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
 // ── Browser back/forward ───────────────
