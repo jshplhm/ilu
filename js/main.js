@@ -6,6 +6,8 @@
 const FIREBASE_URL = 'https://ilu-site-default-rtdb.firebaseio.com';
 const USE_FIREBASE = FIREBASE_URL !== 'YOUR_FIREBASE_URL_HERE';
 
+const YEARS = ['2026', '2025', '2024', '2023', '2022'];
+
 let photoManifest = {};
 let currentYear   = null;
 let currentPhotos = [];
@@ -48,12 +50,10 @@ async function firebaseLoadAll() {
         Object.keys(data[year] || {}).forEach(k => {
           decoded[decodeKey(k)] = data[year][k];
         });
-        // Firebase is always source of truth — replace local
         localSet(year, decoded);
       });
     } else {
-      // Firebase empty (e.g. after reset) — clear all local counts
-      ['2022','2023','2024','2025','2026'].forEach(y => localSet(y, {}));
+      YEARS.forEach(y => localSet(y, {}));
     }
   } catch(e) {}
 }
@@ -88,13 +88,11 @@ function sortByHearts(arr, year) {
   return [...arr].sort((a, b) => getCount(year, b) - getCount(year, a));
 }
 
-// ── Total hearts across all years ──────
+// ── Total hearts counter ───────────────
 function updateTotalHearts() {
-  const years = ['2022', '2023', '2024', '2025', '2026'];
   let total = 0;
-  years.forEach(year => {
-    const hearts = localGet(year);
-    Object.values(hearts).forEach(count => { total += count; });
+  YEARS.forEach(year => {
+    Object.values(localGet(year)).forEach(count => { total += count; });
   });
   let el = document.getElementById('heartTotal');
   if (!el) {
@@ -162,7 +160,7 @@ function makeItem(filename) {
     badge.querySelector('.badge-count').textContent = newCount;
     badge.classList.add('visible');
     updateTotalHearts();
-     
+
     lastHearted = filename;
     clearTimeout(resortTimer);
     resortTimer = setTimeout(() => flipResort(), 2000);
@@ -251,7 +249,7 @@ function flipResort() {
 }
 
 // ── Show year ──────────────────────────
-function showYear(year) {
+function showYear(year, pushState = true) {
   currentYear = String(year);
   document.querySelectorAll('.year-nav a').forEach(a => {
     a.classList.toggle('active', a.dataset.year === currentYear);
@@ -259,15 +257,67 @@ function showYear(year) {
   currentPhotos = sortByHearts(photoManifest[currentYear] || [], currentYear);
   buildGallery(currentPhotos);
   updateTotalHearts();
+  if (pushState) {
+    window.history.pushState({year: currentYear}, '', '/' + currentYear);
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ── Year nav ───────────────────────────
+// ── Year nav clicks ────────────────────
 document.querySelectorAll('.year-nav a').forEach(a => {
   a.addEventListener('click', e => {
     e.preventDefault();
     showYear(a.dataset.year);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
+});
+
+// ── Year swipe (left/right on main page) ──
+let pageSwipeStartX   = 0;
+let pageSwipeStartY   = 0;
+let pageSwipeCurrentX = 0;
+let pageAxisLocked    = null;
+
+document.addEventListener('touchstart', e => {
+  // Ignore if more than one finger
+  if (e.touches.length > 1) return;
+  pageSwipeStartX   = e.touches[0].clientX;
+  pageSwipeStartY   = e.touches[0].clientY;
+  pageSwipeCurrentX = pageSwipeStartX;
+  pageAxisLocked    = null;
+}, { passive: true });
+
+document.addEventListener('touchmove', e => {
+  if (e.touches.length > 1) return;
+  pageSwipeCurrentX = e.touches[0].clientX;
+  const dx = pageSwipeCurrentX - pageSwipeStartX;
+  const dy = e.touches[0].clientY - pageSwipeStartY;
+
+  if (!pageAxisLocked) {
+    if (Math.abs(dx) > Math.abs(dy) + 8) pageAxisLocked = 'h';
+    else if (Math.abs(dy) > Math.abs(dx) + 8) pageAxisLocked = 'v';
+  }
+}, { passive: true });
+
+document.addEventListener('touchend', () => {
+  if (pageAxisLocked !== 'h') return;
+
+  const dx        = pageSwipeCurrentX - pageSwipeStartX;
+  const threshold = window.innerWidth * 0.3; // 30% of screen width to commit
+
+  if (Math.abs(dx) < threshold) return;
+
+  const idx     = YEARS.indexOf(currentYear);
+  const nextIdx = dx < 0 ? idx + 1 : idx - 1; // swipe left = older, swipe right = newer
+
+  if (nextIdx >= 0 && nextIdx < YEARS.length) {
+    showYear(YEARS[nextIdx]);
+  }
+}, { passive: true });
+
+// ── Handle browser back/forward ────────
+window.addEventListener('popstate', e => {
+  const year = e.state?.year;
+  if (year && YEARS.includes(year)) showYear(year, false);
 });
 
 // ── Responsive resize ──────────────────
@@ -284,28 +334,18 @@ window.addEventListener('resize', () => {
 // ── Init ───────────────────────────────
 (async () => {
   await Promise.all([loadManifest(), firebaseLoadAll()]);
-  const years = ['2026', '2025', '2024', '2023', '2022'];
-  const def = years.find(y => (photoManifest[y] || []).length > 0) || '2026';
+  const def = YEARS.find(y => (photoManifest[y] || []).length > 0) || '2026';
 
-  // Read year from clean URL path e.g. ilü.com/2025
   const path = window.location.pathname.replace('/', '');
-  const startYear = years.includes(path) ? path : def;
-  showYear(startYear);
+  const startYear = YEARS.includes(path) ? path : def;
 
-  // Update URL when switching years
-  document.querySelectorAll('.year-nav a').forEach(a => {
-    a.addEventListener('click', () => {
-      window.history.pushState({}, '', '/' + a.dataset.year);
-    });
-  });
+  showYear(startYear, false); // don't pushState on initial load
 
   // Preload other years in background after 3 seconds
   setTimeout(() => {
-    const otherYears = years.filter(y => y !== startYear);
-    otherYears.forEach(year => {
-      (photoManifest[year] || []).length > 0 && (photoManifest[year] || []).forEach(filename => {
-        const img = new Image();
-        img.src = `photos/${year}/${filename}`;
+    YEARS.filter(y => y !== startYear).forEach(year => {
+      (photoManifest[year] || []).forEach(filename => {
+        new Image().src = `photos/${year}/${filename}`;
       });
     });
   }, 3000);
