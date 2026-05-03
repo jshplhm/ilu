@@ -364,7 +364,11 @@ document.querySelectorAll('.year-nav a').forEach(a => {
 
 // ── Logo click ─────────────────────────
 document.getElementById('logoLink').addEventListener('click', () => {
-  showYear(YEARS[0]);
+  hiddenMode = false;
+  document.body.classList.remove('hidden-mode');
+  showYear(YEARS[0], false);
+  window.history.pushState({ year: YEARS[0] }, '', '/');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
 // ── Browser back/forward ───────────────
