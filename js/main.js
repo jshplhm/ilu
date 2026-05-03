@@ -220,7 +220,7 @@ function buildGallery(photos) {
   const ready     = new Array(photos.length).fill(false);
   let nextPlace  = 0;
   let lastPlaced = 0;
-  const STAGGER  = 200; // ms between each card appearing
+  const STAGGER  = 80; // ms between each card appearing
 
 function tryPlace() {
   while (nextPlace < items.length && ready[nextPlace]) {
