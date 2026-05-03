@@ -152,13 +152,8 @@ function makeItem(filename, year, container) {
   const img = document.createElement('img');
   img.src      = `photos/${year}/${filename}`;
   img.alt      = '';
-  img.loading  = 'lazy';
   img.decoding = 'async';
   img.setAttribute('draggable', 'false');
-  img.addEventListener('load', () => {
-    img.classList.add('loaded');
-    item.classList.add('loaded');
-  });
   img.addEventListener('error', () => { item.style.display = 'none'; });
 
   const badge = document.createElement('div');
@@ -208,10 +203,57 @@ function buildGallery(photos) {
     return;
   }
 
-  const n    = numCols();
-  const cols = createCols(n, gallery);
-  photos.forEach((filename, i) => {
-  cols[i % n].appendChild(makeItem(filename, currentYear, gallery));
+  const n          = numCols();
+  const cols       = createCols(n, gallery);
+  const colHeights = new Array(n).fill(0);
+
+  function shortestColIdx() {
+    let idx = 0;
+    for (let i = 1; i < n; i++) {
+      if (colHeights[i] < colHeights[idx]) idx = i;
+    }
+    return idx;
+  }
+
+  // Build all items with eager loading so all fetches start in parallel
+  const items     = photos.map(f => makeItem(f, currentYear));
+  const ready     = new Array(photos.length).fill(false);
+  let   nextPlace = 0;
+
+  function tryPlace() {
+    while (nextPlace < items.length && ready[nextPlace]) {
+      const item = items[nextPlace];
+      const img  = item.querySelector('img');
+      const idx  = shortestColIdx();
+
+      cols[idx].appendChild(item);
+
+      // Use real aspect ratio to track column height accurately
+      const colW = cols[idx].offsetWidth;
+      const ar   = img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1.33;
+      colHeights[idx] += colW * ar + 8; // 8 = --gap
+
+      // Fade in after browser has painted the item into the DOM
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        item.classList.add('visible');
+      }));
+
+      nextPlace++;
+    }
+  }
+
+  items.forEach((item, i) => {
+    const img  = item.querySelector('img');
+    img.loading = 'eager'; // override lazy — we want all fetches to start now
+
+    if (img.complete && img.naturalWidth > 0) {
+      // Already cached
+      ready[i] = true;
+      tryPlace();
+    } else {
+      img.addEventListener('load',  () => { ready[i] = true; tryPlace(); }, { once: true });
+      img.addEventListener('error', () => { ready[i] = true; item.style.display = 'none'; tryPlace(); }, { once: true });
+    }
   });
 }
 
