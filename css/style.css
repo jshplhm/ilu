@@ -223,3 +223,14 @@ header {
   transform: translateY(0);
   transition: opacity 1.2s ease, transform 1.2s ease;
 }
+
+/* ── Total heart counter ── */
+.heart-total {
+  text-align: center;
+  padding: 0 0 48px;
+  color: #ccc;
+  font-size: 0.75rem;
+  font-family: var(--font);
+  letter-spacing: 0.06em;
+  font-weight: 500;
+}
