@@ -179,6 +179,7 @@ function buildPanel(panel, year) {
   });
 
   panel.appendChild(galleryDiv);
+  if (panel === curPanel) updateViewportHeight();
 }
 
 // ── Make a photo card ──────────────────
@@ -311,8 +312,15 @@ function loadAdjacentPanels(year) {
   else nextPanel.innerHTML = '';
 }
 
+// ── Update viewport height to match current panel ──
+function updateViewportHeight() {
+  const viewport = document.querySelector('.slider-viewport');
+  if (viewport) viewport.style.height = curPanel.scrollHeight + 'px';
+}
+
 // ── Show year ──────────────────────────
-function showYear(year, pushState = true, fromSwipe = false) {
+function showYear(year, pushState = true, swipeDir = 0) {
+  const fromSwipe = swipeDir !== 0;
   currentYear   = String(year);
   currentPhotos = sortByHearts(photoManifest[currentYear] || [], currentYear);
 
@@ -321,24 +329,22 @@ function showYear(year, pushState = true, fromSwipe = false) {
   });
 
   if (!fromSwipe) {
-    // Full rebuild — nav click or initial load
     buildPanel(curPanel, currentYear);
     sliderTrack.style.transition = 'none';
     sliderTrack.style.transform  = 'translateX(-100vw)';
   } else {
-    // After swipe — panels already in place, just rotate them
-    // The panel that slid into view becomes curPanel
-    // No rebuild needed, no flash
-    const dir = YEARS.indexOf(year) > YEARS.indexOf(currentYear === year ? year : currentYear) ? 1 : -1;
-    const temp = dir > 0 ? nextPanel : prevPanel;
-    if (dir > 0) {
+    // Rotate panels based on explicit direction
+    // swipeDir > 0 = swiped left (older year), swipeDir < 0 = swiped right (newer year)
+    if (swipeDir > 0) {
+      const old = prevPanel;
       prevPanel = curPanel;
       curPanel  = nextPanel;
-      nextPanel = temp;
+      nextPanel = old;
     } else {
+      const old = nextPanel;
       nextPanel = curPanel;
       curPanel  = prevPanel;
-      prevPanel = temp;
+      prevPanel = old;
     }
     sliderTrack.innerHTML = '';
     sliderTrack.appendChild(prevPanel);
@@ -350,6 +356,7 @@ function showYear(year, pushState = true, fromSwipe = false) {
 
   loadAdjacentPanels(currentYear);
   updateTotalHearts();
+  updateViewportHeight();
 
   if (pushState) {
     window.history.pushState({ year: currentYear }, '', '/' + currentYear);
@@ -422,7 +429,7 @@ document.addEventListener('touchend', () => {
     sliderTrack.style.transform  = 'translateX(-200vw)';
     sliderTrack.addEventListener('transitionend', () => {
       isSliding = false;
-      showYear(YEARS[idx + 1], true, true);
+      showYear(YEARS[idx + 1], true, 1); // swipe left → older
     }, { once: true });
 
   } else if (dx > threshold && idx > 0) {
@@ -432,7 +439,7 @@ document.addEventListener('touchend', () => {
     sliderTrack.style.transform  = 'translateX(0)';
     sliderTrack.addEventListener('transitionend', () => {
       isSliding = false;
-      showYear(YEARS[idx - 1], true, true);
+      showYear(YEARS[idx - 1], true, -1); // swipe right → newer
     }, { once: true });
 
   } else {
