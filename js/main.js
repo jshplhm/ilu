@@ -161,7 +161,8 @@ function makeItem(filename) {
     const newCount = addHeart(currentYear, filename);
     badge.querySelector('.badge-count').textContent = newCount;
     badge.classList.add('visible');
-
+    updateTotalHearts();
+     
     lastHearted = filename;
     clearTimeout(resortTimer);
     resortTimer = setTimeout(() => flipResort(), 2000);
@@ -257,6 +258,7 @@ function showYear(year) {
   });
   currentPhotos = sortByHearts(photoManifest[currentYear] || [], currentYear);
   buildGallery(currentPhotos);
+  updateTotalHearts();
 }
 
 // ── Year nav ───────────────────────────
