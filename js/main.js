@@ -409,13 +409,10 @@ function showYear(year, pushState = true) {
     window.history.pushState({ year: currentYear }, '', '/' + currentYear);
   }
 
-  const navHeight  = document.querySelector('nav').offsetHeight;
-  const galleryTop = gallery.getBoundingClientRect().top + window.scrollY - navHeight;
-  if (pushState) {
-    window.scrollTo({ top: galleryTop, behavior: 'smooth' });
-  } else {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
+  const nav    = document.querySelector('nav');
+  const header = document.querySelector('header');
+  const target = header.offsetTop + header.offsetHeight - nav.offsetHeight;
+  window.scrollTo({ top: target, behavior: 'smooth' });
 }
 
 // ── Year nav clicks ────────────────────
