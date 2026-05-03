@@ -412,7 +412,7 @@ function showYear(year, pushState = true) {
   const nav    = document.querySelector('nav');
   const header = document.querySelector('header');
   const target = header.offsetTop + header.offsetHeight - nav.offsetHeight;
-  window.scrollTo({ top: target, behavior: 'smooth' });
+  window.scrollTo({ top: target, behavior: 'instant' });
 }
 
 // ── Year nav clicks ────────────────────
