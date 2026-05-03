@@ -238,3 +238,22 @@ header {
   letter-spacing: 0.06em;
   font-weight: 500;
 }
+
+/* ── Year slider ── */
+.slider-viewport {
+  overflow: hidden;
+  width: 100%;
+}
+
+.slider-track {
+  display: flex;
+  width: 300vw;
+  transform: translateX(-100vw);
+  will-change: transform;
+}
+
+.slider-panel {
+  width: 100vw;
+  min-width: 100vw;
+  overflow: visible;
+}
