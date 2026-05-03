@@ -271,7 +271,6 @@ function openHiddenPage() {
   hiddenMode = true;
   document.querySelectorAll('.year-nav a').forEach(a => a.classList.remove('active'));
   document.body.classList.add('hidden-mode');
-  window.history.pushState({ hidden: true }, '', '/us');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
   // Build hidden page content
