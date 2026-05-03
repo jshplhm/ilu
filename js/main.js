@@ -288,7 +288,7 @@ function openHiddenPage() {
   usGallery.className = 'gallery';
   main.appendChild(usGallery);
 
-  const usPhotos = sortByHearts(photoManifest['us'] || [], 'xo');
+  const usPhotos = sortByHearts(photoManifest['xo'] || [], 'xo');
 
   if (!usPhotos.length) {
     usGallery.innerHTML = '<p class="gallery-message">photos coming soon ✦</p>';
