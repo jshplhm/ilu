@@ -412,18 +412,20 @@ document.addEventListener('touchmove', e => {
     else return;
   }
 
-  if (swipeAxisLocked !== 'h') return;
+  // Once horizontal — block vertical scroll for this gesture
+  if (swipeAxisLocked === 'h') e.preventDefault();
+  else return;
 
-  const idx    = YEARS.indexOf(currentYear);
-  const atLeft  = idx === 0 && dx > 0;   // no newer year
-  const atRight = idx === YEARS.length - 1 && dx < 0; // no older year
+  const idx     = YEARS.indexOf(currentYear);
+  const atLeft  = idx === 0 && dx > 0;
+  const atRight = idx === YEARS.length - 1 && dx < 0;
 
   const resistance = (atLeft || atRight) ? 0.15 : 1;
   const offset = -window.innerWidth + (dx * resistance);
 
   swipeActive = true;
   sliderTrack.style.transform = `translateX(${offset}px)`;
-}, { passive: true });
+}, { passive: false });
 
 document.addEventListener('touchend', () => {
   if (!swipeActive || isAnimating) { swipeActive = false; return; }
