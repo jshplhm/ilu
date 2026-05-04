@@ -264,9 +264,7 @@ if (nextPlace === items.length) {
         ph.className = 'gallery-placeholder';
         ph.style.height = (remaining - 8) + 'px';
         col.appendChild(ph);
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-        ph.classList.add('visible');
-}));
+        setTimeout(() => ph.classList.add('visible'), 50);
       }
     });
   }, 400);
@@ -355,9 +353,7 @@ function flipResort(photos, year, container) {
               ph.className = 'gallery-placeholder';
               ph.style.height = (remaining - 8) + 'px';
               col.appendChild(ph);
-              requestAnimationFrame(() => requestAnimationFrame(() => {
-              ph.classList.add('visible');
-              }));
+              setTimeout(() => ph.classList.add('visible'), 50);
             }
           });
         }
