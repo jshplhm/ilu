@@ -39,10 +39,9 @@ nav {
   z-index: 100;
 }
 
-.logo { font-size: 1.4rem; font-weight: 900; letter-spacing: -0.03em; padding-bottom: 0px; }
+.logo { font-size: 1rem; font-weight: 500; letter-spacing: -0.03em; padding-bottom: 2px; }
 
 .logo.active {
-  padding-bottom: 0px;
   border-bottom: 2px solid var(--black);
 }
 
