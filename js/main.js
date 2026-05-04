@@ -491,12 +491,22 @@ document.querySelectorAll('.year-nav a').forEach(a => {
     if (hiddenMode || a.dataset.year !== currentYear) {
       showYear(a.dataset.year);
     } else {
-      // Same year — scroll to gallery top
       const navHeight  = document.querySelector('nav').offsetHeight;
       const galleryTop = gallery.getBoundingClientRect().top + window.scrollY - navHeight;
       window.scrollTo({ top: galleryTop, behavior: 'smooth' });
     }
   });
+
+  a.addEventListener('touchstart', e => {
+    e.preventDefault();
+    if (hiddenMode || a.dataset.year !== currentYear) {
+      showYear(a.dataset.year);
+    } else {
+      const navHeight  = document.querySelector('nav').offsetHeight;
+      const galleryTop = gallery.getBoundingClientRect().top + window.scrollY - navHeight;
+      window.scrollTo({ top: galleryTop, behavior: 'smooth' });
+    }
+  }, { passive: false });
 });
 
 // ── Logo click ─────────────────────────
