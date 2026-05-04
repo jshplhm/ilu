@@ -311,8 +311,13 @@ function flipResort(photos, year, container) {
   const items = [...container.querySelectorAll('.gallery-item')];
   if (items.length < 2) return;
 
-  const newOrder = sortByHearts(photos, year);
-  const changed  = newOrder.some((f, i) => f !== (items[i]?.dataset.filename));
+  const newOrder = year === 'all'
+  ? getAllPhotos()
+  : sortByHearts(photos, year);
+const changed = newOrder.some((f, i) => {
+  const fname = year === 'all' ? f.filename : f;
+  return fname !== items[i]?.dataset.filename;
+});
   if (!changed) return;
 
   isAnimating = true;
@@ -328,10 +333,11 @@ function flipResort(photos, year, container) {
   container.innerHTML = '';
   const n    = numCols();
   const cols = createCols(n, container);
-  newOrder.forEach(filename => {
-    const el = items.find(el => el.dataset.filename === filename);
-    if (el) shortestCol(cols).appendChild(el);
-  });
+  newOrder.forEach(f => {
+  const fname = year === 'all' ? f.filename : f;
+  const el = items.find(el => el.dataset.filename === fname);
+  if (el) shortestCol(cols).appendChild(el);
+});
 
   window.scrollTo({ top: scrollY, behavior: 'instant' });
   container.offsetHeight;
@@ -440,7 +446,6 @@ function showYear(year, pushState = true, showHeader = false) {
   document.querySelectorAll('.year-nav a').forEach(a => {
     a.classList.toggle('active', a.dataset.year === currentYear);
   });
-  document.getElementById('logoLink').classList.remove('active');
   currentPhotos = sortByHearts(photoManifest[currentYear] || [], currentYear);
   buildGallery(currentPhotos, currentYear, gallery);
 
@@ -520,7 +525,13 @@ window.addEventListener('resize', () => {
     if (hiddenMode) return;
     const newN     = numCols();
     const currentN = gallery.querySelectorAll('.gallery-col').length;
-    if (newN !== currentN) buildGallery(currentPhotos);
+    if (newN !== currentN) {
+  if (currentYear === 'all') {
+    buildGallery(getAllPhotos(), 'all', gallery);
+  } else {
+    buildGallery(currentPhotos, currentYear, gallery);
+  }
+}
   }, 150);
 });
 
