@@ -17,6 +17,8 @@ let lastHearted   = null;
 let isAnimating   = false;
 let hiddenMode    = false;
 let buildGeneration = 0;
+let shuffleOrder = {};
+let allPhotosShuffleOrder = null;
 
 const gallery = document.getElementById('gallery');
 
@@ -89,13 +91,17 @@ function addHeart(year, filename) {
 
 // ── Sort ───────────────────────────────
 function sortByHearts(arr, year) {
-  const hearted   = arr.filter(f => getCount(year, f) > 0);
-  const unhearted = arr.filter(f => getCount(year, f) === 0);
-
-  for (let i = unhearted.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [unhearted[i], unhearted[j]] = [unhearted[j], unhearted[i]];
+  if (!shuffleOrder[year]) {
+    const unhearted = arr.filter(f => getCount(year, f) === 0);
+    for (let i = unhearted.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [unhearted[i], unhearted[j]] = [unhearted[j], unhearted[i]];
+    }
+    shuffleOrder[year] = unhearted;
   }
+
+  const hearted = arr.filter(f => getCount(year, f) > 0);
+  const unhearted = shuffleOrder[year].filter(f => arr.includes(f) && getCount(year, f) === 0);
 
   return [
     ...hearted.sort((a, b) => getCount(year, b) - getCount(year, a)),
@@ -110,19 +116,27 @@ function getAllPhotos() {
       all.push({ filename, year });
     });
   });
+
   const hearted   = all.filter(p => getCount(p.year, p.filename) > 0);
-const unhearted = all.filter(p => getCount(p.year, p.filename) === 0);
+  const unhearted = all.filter(p => getCount(p.year, p.filename) === 0);
 
-// Fisher-Yates shuffle on unhearted
-for (let i = unhearted.length - 1; i > 0; i--) {
-  const j = Math.floor(Math.random() * (i + 1));
-  [unhearted[i], unhearted[j]] = [unhearted[j], unhearted[i]];
-}
+  if (!allPhotosShuffleOrder) {
+    const toShuffle = [...unhearted];
+    for (let i = toShuffle.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [toShuffle[i], toShuffle[j]] = [toShuffle[j], toShuffle[i]];
+    }
+    allPhotosShuffleOrder = toShuffle;
+  }
 
-return [
-  ...hearted.sort((a, b) => getCount(b.year, b.filename) - getCount(a.year, a.filename)),
-  ...unhearted
-];
+  const stableUnhearted = allPhotosShuffleOrder.filter(p =>
+    unhearted.some(u => u.filename === p.filename && u.year === p.year)
+  );
+
+  return [
+    ...hearted.sort((a, b) => getCount(b.year, b.filename) - getCount(a.year, a.filename)),
+    ...stableUnhearted
+  ];
 }
 
 // ── Total hearts (main site only) ──────
