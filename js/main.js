@@ -248,50 +248,51 @@ function buildGallery(photos, year, container) {
   const STAGGER   = 60; // ms between each card appearing
 
   function tryPlace() {
-   if (buildGeneration !== myGen) return;
-     while (nextPlace < items.length && ready[nextPlace]) { 
-      const item = items[nextPlace];
-      const img  = item.querySelector('img');
-      const idx  = shortestColIdx();
-      const delay = Math.max(0, lastPlaced + STAGGER - Date.now());
-
-      cols[idx].appendChild(item);
-      const colW = cols[idx].offsetWidth;
-      const ar   = img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1.33;
-      colHeights[idx] += colW * ar + 8;
-
-       
-      setTimeout(() => {
   if (buildGeneration !== myGen) return;
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    item.classList.add('visible');
-  }));
-}, delay);
-      
-      lastPlaced = Date.now() + delay;
-      nextPlace++;
+  if (nextPlace < items.length && ready[nextPlace]) {
+    const item = items[nextPlace];
+    const img  = item.querySelector('img');
+    const idx  = shortestColIdx();
+    const delay = Math.max(0, lastPlaced + STAGGER - Date.now());
 
-      if (nextPlace === 1) {
-  if (year !== 'xo') updateTotalHearts();
-}
-if (nextPlace === items.length) {
-  setTimeout(() => {
-    if (buildGeneration !== myGen) return;
-    const maxH = Math.max(...cols.map(c => c.offsetHeight));
-    cols.forEach(col => {
-      const remaining = maxH - col.offsetHeight;
-      if (remaining > 0) {
-        const ph = document.createElement('div');
-        ph.className = 'gallery-placeholder';
-        ph.style.height = (remaining - 8) + 'px';
-        col.appendChild(ph);
-        setTimeout(() => ph.classList.add('visible'), 50);
-      }
-    });
-  }, 400);
-}
+    cols[idx].appendChild(item);
+    const colW = cols[idx].offsetWidth;
+    const ar   = img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1.33;
+    colHeights[idx] += colW * ar + 8;
+
+    setTimeout(() => {
+      if (buildGeneration !== myGen) return;
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        item.classList.add('visible');
+      }));
+    }, delay);
+
+    lastPlaced = Date.now() + delay;
+    nextPlace++;
+
+    if (nextPlace === 1) {
+      if (year !== 'xo') updateTotalHearts();
     }
+    if (nextPlace === items.length) {
+      setTimeout(() => {
+        if (buildGeneration !== myGen) return;
+        const maxH = Math.max(...cols.map(c => c.offsetHeight));
+        cols.forEach(col => {
+          const remaining = maxH - col.offsetHeight;
+          if (remaining > 0) {
+            const ph = document.createElement('div');
+            ph.className = 'gallery-placeholder';
+            ph.style.height = (remaining - 8) + 'px';
+            col.appendChild(ph);
+            setTimeout(() => ph.classList.add('visible'), 50);
+          }
+        });
+      }, 400);
+    }
+
+    setTimeout(tryPlace, 0);
   }
+}
 
   items.forEach((item, i) => {
     const img = item.querySelector('img');
