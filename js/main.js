@@ -89,7 +89,18 @@ function addHeart(year, filename) {
 
 // ── Sort ───────────────────────────────
 function sortByHearts(arr, year) {
-  return [...arr].sort((a, b) => getCount(year, b) - getCount(year, a));
+  const hearted   = arr.filter(f => getCount(year, f) > 0);
+  const unhearted = arr.filter(f => getCount(year, f) === 0);
+
+  for (let i = unhearted.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [unhearted[i], unhearted[j]] = [unhearted[j], unhearted[i]];
+  }
+
+  return [
+    ...hearted.sort((a, b) => getCount(year, b) - getCount(year, a)),
+    ...unhearted
+  ];
 }
 
 function getAllPhotos() {
@@ -99,7 +110,19 @@ function getAllPhotos() {
       all.push({ filename, year });
     });
   });
-  return all.sort((a, b) => getCount(b.year, b.filename) - getCount(a.year, a.filename));
+  const hearted   = all.filter(p => getCount(p.year, p.filename) > 0);
+const unhearted = all.filter(p => getCount(p.year, p.filename) === 0);
+
+// Fisher-Yates shuffle on unhearted
+for (let i = unhearted.length - 1; i > 0; i--) {
+  const j = Math.floor(Math.random() * (i + 1));
+  [unhearted[i], unhearted[j]] = [unhearted[j], unhearted[i]];
+}
+
+return [
+  ...hearted.sort((a, b) => getCount(b.year, b.filename) - getCount(a.year, a.filename)),
+  ...unhearted
+];
 }
 
 // ── Total hearts (main site only) ──────
