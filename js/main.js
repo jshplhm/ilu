@@ -7,6 +7,7 @@ const FIREBASE_URL = 'https://ilu-site-default-rtdb.firebaseio.com';
 const USE_FIREBASE = FIREBASE_URL !== 'YOUR_FIREBASE_URL_HERE';
 
 const YEARS = ['2026', '2025', '2024', '2023', '2022'];
+const ALL_PHOTOS = 'all';
 
 let photoManifest = {};
 let currentYear   = null;
@@ -89,6 +90,16 @@ function addHeart(year, filename) {
 // ── Sort ───────────────────────────────
 function sortByHearts(arr, year) {
   return [...arr].sort((a, b) => getCount(year, b) - getCount(year, a));
+}
+
+function getAllPhotos() {
+  const all = [];
+  YEARS.forEach(year => {
+    (photoManifest[year] || []).forEach(filename => {
+      all.push({ filename, year });
+    });
+  });
+  return all.sort((a, b) => getCount(b.year, b.filename) - getCount(a.year, a.filename));
 }
 
 // ── Total hearts (main site only) ──────
@@ -182,11 +193,17 @@ function makeItem(filename, year, container) {
      resortTimer = setTimeout(() => flipResort(photoManifest['xo'], 'xo', document.querySelector('main .gallery')), 1000);
    } else {
      updateTotalHearts();
-     if (year === currentYear) {
-       lastHearted = filename;
-       clearTimeout(resortTimer);
-       resortTimer = setTimeout(() => flipResort(currentPhotos, currentYear, gallery), 1000);
-     }
+     if (year === currentYear || currentYear === 'all') {
+  lastHearted = filename;
+  clearTimeout(resortTimer);
+  resortTimer = setTimeout(() => {
+    if (currentYear === 'all') {
+      flipResort(getAllPhotos(), 'all', gallery);
+    } else {
+      flipResort(currentPhotos, currentYear, gallery);
+    }
+  }, 1000);
+}
    }
   });
 
@@ -197,6 +214,7 @@ function makeItem(filename, year, container) {
 
 // ── Build gallery ──────────────────────
 function buildGallery(photos, year, container) {
+  const isAll = year === 'all';
   buildGeneration++;
   const myGen = buildGeneration;
   container.innerHTML = '';
@@ -221,7 +239,9 @@ function buildGallery(photos, year, container) {
     return idx;
   }
 
-  const items     = photos.map(f => makeItem(f, year));
+  const items = isAll
+  ? photos.map(p => makeItem(p.filename, p.year))
+  : photos.map(f => makeItem(f, year));
   const ready     = new Array(photos.length).fill(false);
   let   nextPlace = 0;
   let   lastPlaced = 0;
@@ -404,9 +424,10 @@ function closeHiddenPage() {
 
 // ── Show year ──────────────────────────
 function showYear(year, pushState = true, showHeader = false) {
-  hiddenMode  = false;
+  hiddenMode = false;
   document.body.classList.remove('hidden-mode');
-  document.querySelector('header').classList.toggle('hidden', !showHeader); // ← add this
+  document.querySelector('header').classList.add('hidden');
+  document.getElementById('logoLink').classList.remove('active');
   currentYear = String(year);
 
   // Restore main structure if hidden page wiped it
@@ -425,6 +446,32 @@ function showYear(year, pushState = true, showHeader = false) {
 
   if (pushState) {
     window.history.pushState({ year: currentYear }, '', '/' + currentYear);
+  }
+
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+function showAll(pushState = true) {
+  hiddenMode = false;
+  document.body.classList.remove('hidden-mode');
+  currentYear = 'all';
+
+  if (!gallery.isConnected) {
+    const main = document.querySelector('main');
+    main.innerHTML = '';
+    main.appendChild(gallery);
+  }
+
+  document.querySelector('header').classList.remove('hidden');
+  document.getElementById('logoLink').classList.add('active');
+  document.querySelectorAll('.year-nav a').forEach(a => a.classList.remove('active'));
+
+  const allPhotos = getAllPhotos();
+  buildGallery(allPhotos, 'all', gallery);
+  updateTotalHearts();
+
+  if (pushState) {
+    window.history.pushState({ all: true }, '', '/');
   }
 
   window.scrollTo({ top: 0, behavior: 'instant' });
@@ -449,15 +496,16 @@ document.querySelectorAll('.year-nav a').forEach(a => {
 document.getElementById('logoLink').addEventListener('click', () => {
   hiddenMode = false;
   document.body.classList.remove('hidden-mode');
-  document.getElementById('logoLink').classList.add('active');
-  showYear(YEARS[0], false, true);
-  window.history.pushState({ year: YEARS[0] }, '', '/');
+  showAll(true);
+  window.history.pushState({ all: true }, '', '/');
 });
 
 // ── Browser back/forward ───────────────
 window.addEventListener('popstate', e => {
   if (e.state?.hidden) {
     openHiddenPage();
+  } else if (e.state?.all) {
+    showAll(false);
   } else {
     const year = e.state?.year;
     if (year && YEARS.includes(year)) showYear(year, false);
@@ -483,9 +531,12 @@ window.addEventListener('resize', () => {
   const path = window.location.pathname.replace('/', '');
 
   const startYear = YEARS.includes(path) ? path : def;
-  const isRoot = !YEARS.includes(path);
-  showYear(startYear, false, isRoot);
-  if (isRoot) document.getElementById('logoLink').classList.add('active');
+const isRoot = !YEARS.includes(path);
+if (isRoot) {
+  showAll(false);
+} else {
+  showYear(startYear, false, false);
+}
 
   // Preload other years in background
   setTimeout(() => {
