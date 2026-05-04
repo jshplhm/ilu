@@ -236,6 +236,7 @@ header.hidden {
   .year-nav { gap: 14px; }
   .year-nav a { font-size: 0.9rem; }
   header { padding: 36px 20px 52px; }
+  .hidden-message { padding: 36px 20px 52px; }
   /* 2 columns on mobile */
   .gallery { --cols: 2; }
 }
