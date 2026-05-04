@@ -248,7 +248,8 @@ function buildGallery(photos, year, container) {
   const STAGGER   = 60; // ms between each card appearing
 
   function tryPlace() {
-    while (nextPlace < items.length && ready[nextPlace]) {
+   if (buildGeneration !== myGen) return;
+     while (nextPlace < items.length && ready[nextPlace]) { 
       const item = items[nextPlace];
       const img  = item.querySelector('img');
       const idx  = shortestColIdx();
