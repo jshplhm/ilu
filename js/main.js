@@ -416,6 +416,7 @@ function showYear(year, pushState = true, showHeader = false) {
   document.querySelectorAll('.year-nav a').forEach(a => {
     a.classList.toggle('active', a.dataset.year === currentYear);
   });
+  document.getElementById('logoLink').classList.remove('active');
   currentPhotos = sortByHearts(photoManifest[currentYear] || [], currentYear);
   buildGallery(currentPhotos, currentYear, gallery);
 
@@ -445,6 +446,7 @@ document.querySelectorAll('.year-nav a').forEach(a => {
 document.getElementById('logoLink').addEventListener('click', () => {
   hiddenMode = false;
   document.body.classList.remove('hidden-mode');
+  document.getElementById('logoLink').classList.add('active');
   showYear(YEARS[0], false, true);
   window.history.pushState({ year: YEARS[0] }, '', '/');
 });
@@ -480,6 +482,7 @@ window.addEventListener('resize', () => {
   const startYear = YEARS.includes(path) ? path : def;
   const isRoot = !YEARS.includes(path);
   showYear(startYear, false, isRoot);
+  if (isRoot) document.getElementById('logoLink').classList.add('active');
 
   // Preload other years in background
   setTimeout(() => {
