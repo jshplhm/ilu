@@ -288,7 +288,7 @@ body.hidden-mode header {
   font-size: clamp(1.4rem, 3.5vw, 2.4rem);
   font-weight: 600;
   letter-spacing: -0.01em;
-  padding: 52px 24px 52px;
+  padding: 52px 24px 72px;
   color: rgba(255,255,255,0.9);
   font-family: var(--font);
 }
