@@ -102,6 +102,7 @@ header.hidden {
   padding: 0 var(--gap) 80px;
   /* overflow visible so FLIP animations can cross column boundaries */
   overflow: visible;
+  isolation: isolate;
 }
 
 .gallery-message {
