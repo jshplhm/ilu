@@ -15,6 +15,7 @@ let resortTimer   = null;
 let lastHearted   = null;
 let isAnimating   = false;
 let hiddenMode    = false;
+let buildGeneration = 0;
 
 const gallery = document.getElementById('gallery');
 
@@ -178,13 +179,13 @@ function makeItem(filename, year, container) {
      updateXoHearts();
      lastHearted = filename;
      clearTimeout(resortTimer);
-     resortTimer = setTimeout(() => flipResort(photoManifest['xo'], 'xo', document.querySelector('main .gallery')), 2000);
+     resortTimer = setTimeout(() => flipResort(photoManifest['xo'], 'xo', document.querySelector('main .gallery')), 1000);
    } else {
      updateTotalHearts();
      if (year === currentYear) {
        lastHearted = filename;
        clearTimeout(resortTimer);
-       resortTimer = setTimeout(() => flipResort(currentPhotos, currentYear, gallery), 2000);
+       resortTimer = setTimeout(() => flipResort(currentPhotos, currentYear, gallery), 1000);
      }
    }
   });
@@ -196,6 +197,8 @@ function makeItem(filename, year, container) {
 
 // ── Build gallery ──────────────────────
 function buildGallery(photos, year, container) {
+  buildGeneration++;
+  const myGen = buildGeneration;
   container.innerHTML = '';
 
   if (!photos.length) {
@@ -236,12 +239,14 @@ function buildGallery(photos, year, container) {
       const ar   = img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1.33;
       colHeights[idx] += colW * ar + 8;
 
+       
       setTimeout(() => {
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-          item.classList.add('visible');
-        }));
-      }, delay);
-
+  if (buildGeneration !== myGen) return;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    item.classList.add('visible');
+  }));
+}, delay);
+      
       lastPlaced = Date.now() + delay;
       nextPlace++;
 
@@ -264,8 +269,9 @@ function buildGallery(photos, year, container) {
     }
   });
 
-  setTimeout(() => {
-    const maxH = Math.max(...cols.map(c => c.offsetHeight));
+   setTimeout(() => {
+  if (buildGeneration !== myGen) return;
+  const maxH = Math.max(...cols.map(c => c.offsetHeight));
     cols.forEach(col => {
       const remaining = maxH - col.offsetHeight;
       if (remaining > 0) {
@@ -275,7 +281,7 @@ function buildGallery(photos, year, container) {
         col.appendChild(ph);
       }
     });
-  }, STAGGER * photos.length + 300);
+  }, STAGGER * photos.length + 200);
 }
 
 // ── FLIP resort ────────────────────────
