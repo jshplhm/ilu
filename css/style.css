@@ -228,6 +228,16 @@ header.hidden {
 
 .heart-badge-icon { font-size: 0.75rem; color: #ff4d6d; }
 
+.hidden-message {
+  text-align: center;
+  font-size: clamp(1.4rem, 3.5vw, 2.4rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  padding: 52px 24px 72px;
+  color: rgba(255,255,255,0.9);
+  font-family: var(--font);
+}
+
 /* ─────────────────────────────────────────
    Responsive
 ───────────────────────────────────────── */
@@ -282,16 +292,6 @@ body.hidden-mode .year-nav a.active {
 
 body.hidden-mode header {
   display: none;
-}
-
-.hidden-message {
-  text-align: center;
-  font-size: clamp(1.4rem, 3.5vw, 2.4rem);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  padding: 52px 24px 72px;
-  color: rgba(255,255,255,0.9);
-  font-family: var(--font);
 }
 
 .xo-heart-total {
