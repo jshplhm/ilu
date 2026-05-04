@@ -365,7 +365,7 @@ function openHiddenPage() {
 
   const xoPhotos = sortByHearts(photoManifest['xo'] || [], 'xo');
 
-  if (!usPhotos.length) {
+  if (!xoPhotos.length) {
     xoGallery.innerHTML = '<p class="gallery-message">photos coming soon ✦</p>';
   } else {
     const n    = numCols();
