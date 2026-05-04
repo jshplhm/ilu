@@ -124,7 +124,14 @@ header.hidden {
   width: 100%;
   background: currentColor;
   border-radius: 2px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 1.5s ease, transform 1.0s ease;
+}
+
+.gallery-placeholder.visible {
   opacity: 0.06;
+  transform: translateY(0);
 }
 
 /* ─────────────────────────────────────────
