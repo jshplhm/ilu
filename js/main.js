@@ -281,7 +281,7 @@ function buildGallery(photos, year, container) {
         col.appendChild(ph);
       }
     });
-  }, STAGGER * photos.length + 200);
+  }, STAGGER * photos.length + 300);
 }
 
 // ── FLIP resort ────────────────────────
