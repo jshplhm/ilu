@@ -486,19 +486,11 @@ function showAll(pushState = true) {
 
 // ── Year nav clicks ────────────────────
 document.querySelectorAll('.year-nav a').forEach(a => {
-  a.addEventListener('click', e => {
-    e.preventDefault();
-    if (hiddenMode || a.dataset.year !== currentYear) {
-      showYear(a.dataset.year);
-    } else {
-      const navHeight  = document.querySelector('nav').offsetHeight;
-      const galleryTop = gallery.getBoundingClientRect().top + window.scrollY - navHeight;
-      window.scrollTo({ top: galleryTop, behavior: 'smooth' });
-    }
-  });
+  let touched = false;
 
   a.addEventListener('touchstart', e => {
     e.preventDefault();
+    touched = true;
     if (hiddenMode || a.dataset.year !== currentYear) {
       showYear(a.dataset.year);
     } else {
@@ -507,6 +499,18 @@ document.querySelectorAll('.year-nav a').forEach(a => {
       window.scrollTo({ top: galleryTop, behavior: 'smooth' });
     }
   }, { passive: false });
+
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    if (touched) { touched = false; return; }
+    if (hiddenMode || a.dataset.year !== currentYear) {
+      showYear(a.dataset.year);
+    } else {
+      const navHeight  = document.querySelector('nav').offsetHeight;
+      const galleryTop = gallery.getBoundingClientRect().top + window.scrollY - navHeight;
+      window.scrollTo({ top: galleryTop, behavior: 'smooth' });
+    }
+  });
 });
 
 // ── Logo click ─────────────────────────
