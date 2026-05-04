@@ -514,7 +514,19 @@ document.querySelectorAll('.year-nav a').forEach(a => {
 });
 
 // ── Logo click ─────────────────────────
+let logoTouched = false;
+
+document.getElementById('logoLink').addEventListener('touchstart', e => {
+  e.preventDefault();
+  logoTouched = true;
+  hiddenMode = false;
+  document.body.classList.remove('hidden-mode');
+  showAll(true);
+  window.history.pushState({ all: true }, '', '/');
+}, { passive: false });
+
 document.getElementById('logoLink').addEventListener('click', () => {
+  if (logoTouched) { logoTouched = false; return; }
   hiddenMode = false;
   document.body.classList.remove('hidden-mode');
   showAll(true);
