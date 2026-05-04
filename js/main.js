@@ -192,19 +192,19 @@ function makeItem(filename, year, container) {
 }
 
 // ── Build gallery ──────────────────────
-function buildGallery(photos) {
-  gallery.innerHTML = '';
+function buildGallery(photos, year, container) {
+  container.innerHTML = '';
 
   if (!photos.length) {
     const msg = document.createElement('p');
     msg.className = 'gallery-message';
     msg.textContent = 'photos coming soon ✦';
-    gallery.appendChild(msg);
+    container.appendChild(msg);
     return;
   }
 
   const n          = numCols();
-  const cols       = createCols(n, gallery);
+  const cols       = createCols(n, container);
   const colHeights = new Array(n).fill(0);
 
   function shortestColIdx() {
@@ -215,46 +215,44 @@ function buildGallery(photos) {
     return idx;
   }
 
-  // Build all items with eager loading so all fetches start in parallel
-  const items     = photos.map(f => makeItem(f, currentYear));
+  const items     = photos.map(f => makeItem(f, year));
   const ready     = new Array(photos.length).fill(false);
-  let nextPlace  = 0;
-  let lastPlaced = 0;
-  const STAGGER  = 80; // ms between each card appearing
+  let   nextPlace = 0;
+  let   lastPlaced = 0;
+  const STAGGER   = 60; // ms between each card appearing
 
-function tryPlace() {
-  while (nextPlace < items.length && ready[nextPlace]) {
-    const i      = nextPlace;
-    const item   = items[i];
-    const img    = item.querySelector('img');
-    const idx    = shortestColIdx();
-    const delay  = Math.max(0, lastPlaced + STAGGER - Date.now());
+  function tryPlace() {
+    while (nextPlace < items.length && ready[nextPlace]) {
+      const item = items[nextPlace];
+      const img  = item.querySelector('img');
+      const idx  = shortestColIdx();
+      const delay = Math.max(0, lastPlaced + STAGGER - Date.now());
 
-    cols[idx].appendChild(item);
-    const colW = cols[idx].offsetWidth;
-    const ar   = img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1.33;
-    colHeights[idx] += colW * ar + 8;
+      cols[idx].appendChild(item);
+      const colW = cols[idx].offsetWidth;
+      const ar   = img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1.33;
+      colHeights[idx] += colW * ar + 8;
 
-    setTimeout(() => {
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        item.classList.add('visible');
-      }));
-    }, delay);
+      setTimeout(() => {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          item.classList.add('visible');
+        }));
+      }, delay);
 
-    lastPlaced = Date.now() + delay;
-    nextPlace++;
-    if (nextPlace === items.length) {
-    updateTotalHearts();
-    } 
+      lastPlaced = Date.now() + delay;
+      nextPlace++;
+
+      if (nextPlace === 1 || nextPlace === items.length) {
+        if (year !== 'xo') updateTotalHearts();
+      }
+    }
   }
-}
 
   items.forEach((item, i) => {
-    const img  = item.querySelector('img');
-    img.loading = 'eager'; // override lazy — we want all fetches to start now
+    const img = item.querySelector('img');
+    img.loading = 'eager';
 
     if (img.complete && img.naturalWidth > 0) {
-      // Already cached
       ready[i] = true;
       tryPlace();
     } else {
@@ -263,20 +261,18 @@ function tryPlace() {
     }
   });
 
-  // After a short delay, pad shorter columns with ghost cards
   setTimeout(() => {
-  const maxH = Math.max(...cols.map(c => c.offsetHeight));
-  cols.forEach(col => {
-    const remaining = maxH - col.offsetHeight;
-    if (remaining > 0) {
-      const ph = document.createElement('div');
-      ph.className = 'gallery-placeholder';
-      ph.style.height = (remaining - 8) + 'px'; // subtract one gap
-      col.appendChild(ph);
-    }
-  });
+    const maxH = Math.max(...cols.map(c => c.offsetHeight));
+    cols.forEach(col => {
+      const remaining = maxH - col.offsetHeight;
+      if (remaining > 0) {
+        const ph = document.createElement('div');
+        ph.className = 'gallery-placeholder';
+        ph.style.height = (remaining - 8) + 'px';
+        col.appendChild(ph);
+      }
+    });
   }, STAGGER * photos.length + 600);
-   
 }
 
 // ── FLIP resort ────────────────────────
@@ -365,19 +361,7 @@ function openHiddenPage() {
 
   const xoPhotos = sortByHearts(photoManifest['xo'] || [], 'xo');
 
-  if (!xoPhotos.length) {
-    xoGallery.innerHTML = '<p class="gallery-message">photos coming soon ✦</p>';
-  } else {
-    const n    = numCols();
-    const cols = createCols(n, xoGallery);
-    xoPhotos.forEach((filename, i) => {
-     const item = makeItem(filename, 'xo', xoGallery);
-     cols[i % n].appendChild(item);
-     requestAnimationFrame(() => requestAnimationFrame(() => {
-      item.classList.add('visible');
-  }));
-});
-  }
+  buildGallery(xoPhotos, 'xo', xoGallery);
 
   // Hidden heart counter
   const counter = document.createElement('div');
@@ -411,7 +395,7 @@ function showYear(year, pushState = true, showHeader = false) {
     a.classList.toggle('active', a.dataset.year === currentYear);
   });
   currentPhotos = sortByHearts(photoManifest[currentYear] || [], currentYear);
-  buildGallery(currentPhotos);
+  buildGallery(currentPhotos, currentYear, gallery);
   updateTotalHearts();
 
   if (pushState) {
