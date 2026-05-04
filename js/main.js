@@ -178,13 +178,13 @@ function makeItem(filename, year, container) {
      updateXoHearts();
      lastHearted = filename;
      clearTimeout(resortTimer);
-     resortTimer = setTimeout(() => flipResortXo(), 2000);
+     resortTimer = setTimeout(() => flipResort(photoManifest['xo'], 'xo', document.querySelector('main .gallery')), 2000);
    } else {
      updateTotalHearts();
      if (year === currentYear) {
        lastHearted = filename;
        clearTimeout(resortTimer);
-       resortTimer = setTimeout(() => flipResort(), 2000);
+       resortTimer = setTimeout(() => flipResort(currentPhotos, currentYear, gallery), 2000);
      }
    }
   });
@@ -279,16 +279,16 @@ function buildGallery(photos, year, container) {
 }
 
 // ── FLIP resort ────────────────────────
-function flipResort() {
-  const items = [...gallery.querySelectorAll('.gallery-item')];
+function flipResort(photos, year, container) {
+  const items = [...container.querySelectorAll('.gallery-item')];
   if (items.length < 2) return;
 
-  const newOrder = sortByHearts(currentPhotos, currentYear);
-  const changed  = newOrder.some((f, i) => f !== currentPhotos[i]);
+  const newOrder = sortByHearts(photos, year);
+  const changed  = newOrder.some((f, i) => f !== (items[i]?.dataset.filename));
   if (!changed) return;
 
-  isAnimating   = true;
-  currentPhotos = newOrder;
+  isAnimating = true;
+  if (year !== 'xo') currentPhotos = newOrder;
 
   const firstRects = new Map();
   items.forEach(item => {
@@ -297,17 +297,16 @@ function flipResort() {
 
   const scrollY = window.scrollY;
 
-  gallery.innerHTML = '';
+  container.innerHTML = '';
   const n    = numCols();
-  const cols = createCols(n, gallery);
-  currentPhotos.forEach(filename => {
+  const cols = createCols(n, container);
+  newOrder.forEach(filename => {
     const el = items.find(el => el.dataset.filename === filename);
     if (el) shortestCol(cols).appendChild(el);
   });
 
   window.scrollTo({ top: scrollY, behavior: 'instant' });
-
-  gallery.offsetHeight;
+  container.offsetHeight;
 
   const movers = [];
   items.forEach(item => {
