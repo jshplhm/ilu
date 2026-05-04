@@ -42,8 +42,8 @@ nav {
 .logo { font-size: 1.4rem; font-weight: 900; letter-spacing: -0.03em; }
 
 .logo.active {
+  padding-bottom: 4px;
   border-bottom: 2px solid var(--black);
-  padding-bottom: 2px;
 }
 
 .year-nav { display: flex; gap: 20px; }
