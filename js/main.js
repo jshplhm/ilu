@@ -250,9 +250,24 @@ function buildGallery(photos, year, container) {
       lastPlaced = Date.now() + delay;
       nextPlace++;
 
-      if (nextPlace === 1 || nextPlace === items.length) {
-        if (year !== 'xo') updateTotalHearts();
+      if (nextPlace === 1) {
+  if (year !== 'xo') updateTotalHearts();
+}
+if (nextPlace === items.length) {
+  setTimeout(() => {
+    if (buildGeneration !== myGen) return;
+    const maxH = Math.max(...cols.map(c => c.offsetHeight));
+    cols.forEach(col => {
+      const remaining = maxH - col.offsetHeight;
+      if (remaining > 0) {
+        const ph = document.createElement('div');
+        ph.className = 'gallery-placeholder';
+        ph.style.height = (remaining - 8) + 'px';
+        col.appendChild(ph);
       }
+    });
+  }, 400);
+}
     }
   }
 
@@ -268,20 +283,6 @@ function buildGallery(photos, year, container) {
       img.addEventListener('error', () => { ready[i] = true; item.style.display = 'none'; tryPlace(); }, { once: true });
     }
   });
-
-   setTimeout(() => {
-  if (buildGeneration !== myGen) return;
-  const maxH = Math.max(...cols.map(c => c.offsetHeight));
-    cols.forEach(col => {
-      const remaining = maxH - col.offsetHeight;
-      if (remaining > 0) {
-        const ph = document.createElement('div');
-        ph.className = 'gallery-placeholder';
-        ph.style.height = (remaining - 8) + 'px';
-        col.appendChild(ph);
-      }
-    });
-  }, STAGGER * photos.length + 300);
 }
 
 // ── FLIP resort ────────────────────────
