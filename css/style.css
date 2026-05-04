@@ -118,10 +118,9 @@ header.hidden {
 
 .gallery-placeholder {
   width: 100%;
-  border: 1.5px solid currentColor;
+  background: currentColor;
   border-radius: 2px;
-  opacity: 0.12;
-  background: transparent;
+  opacity: 0.06;
 }
 
 /* ─────────────────────────────────────────
