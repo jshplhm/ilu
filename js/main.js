@@ -175,15 +175,18 @@ function makeItem(filename, year, container) {
     badge.classList.add('visible');
 
     if (year === 'xo') {
-      updateXoHearts();
-    } else {
-      updateTotalHearts();
-      if (year === currentYear) {
-        lastHearted = filename;
-        clearTimeout(resortTimer);
-        resortTimer = setTimeout(() => flipResort(), 2000);
-      }
-    }
+     updateXoHearts();
+     lastHearted = filename;
+     clearTimeout(resortTimer);
+     resortTimer = setTimeout(() => flipResortXo(), 2000);
+   } else {
+     updateTotalHearts();
+     if (year === currentYear) {
+       lastHearted = filename;
+       clearTimeout(resortTimer);
+       resortTimer = setTimeout(() => flipResort(), 2000);
+     }
+   }
   });
 
   item.appendChild(img);
