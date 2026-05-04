@@ -109,10 +109,10 @@ function updateTotalHearts() {
 }
 
 // ── Hidden page heart counter ──────────
-function updateUsHearts() {
+function updateXoHearts() {
   let total = 0;
   Object.values(localGet('xo')).forEach(count => { total += count; });
-  const el = document.getElementById('usHeartTotal');
+  const el = document.getElementById('xoHeartTotal');
   if (el) el.textContent = total > 0 ? `♥ ${total.toLocaleString()}` : '';
 }
 
@@ -175,7 +175,7 @@ function makeItem(filename, year, container) {
     badge.classList.add('visible');
 
     if (year === 'xo') {
-      updateUsHearts();
+      updateXoHearts();
     } else {
       updateTotalHearts();
       if (year === currentYear) {
@@ -359,28 +359,32 @@ function openHiddenPage() {
   main.appendChild(msg);
 
   // Gallery
-  const usGallery = document.createElement('div');
-  usGallery.className = 'gallery';
-  main.appendChild(usGallery);
+  const xoGallery = document.createElement('div');
+  xoGallery.className = 'gallery';
+  main.appendChild(xoGallery);
 
-  const usPhotos = sortByHearts(photoManifest['xo'] || [], 'xo');
+  const xoPhotos = sortByHearts(photoManifest['xo'] || [], 'xo');
 
   if (!usPhotos.length) {
-    usGallery.innerHTML = '<p class="gallery-message">photos coming soon ✦</p>';
+    xoGallery.innerHTML = '<p class="gallery-message">photos coming soon ✦</p>';
   } else {
     const n    = numCols();
-    const cols = createCols(n, usGallery);
-    usPhotos.forEach((filename, i) => {
-      cols[i % n].appendChild(makeItem(filename, 'xo', usGallery));
-    });
+    const cols = createCols(n, xoGallery);
+    xoPhotos.forEach((filename, i) => {
+     const item = makeItem(filename, 'xo', xoGallery);
+     cols[i % n].appendChild(item);
+     requestAnimationFrame(() => requestAnimationFrame(() => {
+      item.classList.add('visible');
+  }));
+});
   }
 
   // Hidden heart counter
   const counter = document.createElement('div');
-  counter.id = 'usHeartTotal';
-  counter.className = 'heart-total us-heart-total';
+  counter.id = 'xoHeartTotal';
+  counter.className = 'heart-total xo-heart-total';
   main.appendChild(counter);
-  updateUsHearts();
+  updateXoHearts();
 }
 
 function closeHiddenPage() {
