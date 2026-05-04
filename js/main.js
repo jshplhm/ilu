@@ -333,7 +333,21 @@ function flipResort(photos, year, container) {
         item.style.transition = '';
         item.style.zIndex     = '';
         pending--;
-        if (pending === 0) { isAnimating = false; lastHearted = null; }
+        if (pending === 0) {
+          isAnimating = false;
+          lastHearted = null;
+          const allCols = [...container.querySelectorAll('.gallery-col')];
+          const maxH = Math.max(...allCols.map(c => c.offsetHeight));
+          allCols.forEach(col => {
+            const remaining = maxH - col.offsetHeight;
+            if (remaining > 0) {
+              const ph = document.createElement('div');
+              ph.className = 'gallery-placeholder';
+              ph.style.height = (remaining - 8) + 'px';
+              col.appendChild(ph);
+            }
+          });
+        }
       }, { once: true });
     });
   }));
@@ -398,7 +412,6 @@ function showYear(year, pushState = true, showHeader = false) {
   });
   currentPhotos = sortByHearts(photoManifest[currentYear] || [], currentYear);
   buildGallery(currentPhotos, currentYear, gallery);
-  updateTotalHearts();
 
   if (pushState) {
     window.history.pushState({ year: currentYear }, '', '/' + currentYear);
