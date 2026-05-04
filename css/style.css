@@ -129,7 +129,7 @@ header.hidden {
 .gallery-item {
   opacity: 0;
   transform: translateY(10px);
-  transition: opacity 1.5s ease, transform 1.5s ease;
+  transition: opacity 2.5s ease, transform 2.5s ease;
   position: relative;
   overflow: hidden;
   background: #f0f0f0;
@@ -158,7 +158,7 @@ header.hidden {
 /* Hover lift — desktop only */
 @media (hover: hover) {
   .gallery-item {
-    transition: opacity 0.5s ease, transform 0.5s ease, box-shadow 0.25s ease;
+    transition: opacity 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
   }
   .gallery-item:hover {
     transform: scale(1.01);
