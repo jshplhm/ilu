@@ -315,15 +315,12 @@ item.addEventListener('touchcancel', () => {
   yearBadge.textContent = year;
   item.appendChild(yearBadge);
 
-  // Hover (desktop pointer devices). Guarded by isSorting so DOM
-  // re-appending during flipResort can't trigger a spurious badge.
   item.addEventListener('mouseenter', () => {
-    if (isSorting) return;
-    if (currentYear === 'all' && !hiddenMode) yearBadge.classList.add('visible');
-  });
-  item.addEventListener('mouseleave', () => {
-    yearBadge.classList.remove('visible');
-  });
+  if (currentYear === 'all' && !hiddenMode) yearBadge.classList.add('visible');
+});
+item.addEventListener('mouseleave', () => {
+  yearBadge.classList.remove('visible');
+});
 
   return item;
 }
