@@ -266,11 +266,13 @@ item.addEventListener('pointerdown', () => {
   longPressTimer = setTimeout(() => {
     if (currentYear === 'all' && !hiddenMode) {
       yearBadge.classList.add('visible');
-      setTimeout(() => yearBadge.classList.remove('visible'), 1500);
     }
   }, 500);
 });
-item.addEventListener('pointerup', () => clearTimeout(longPressTimer));
+item.addEventListener('pointerup', () => {
+  clearTimeout(longPressTimer);
+  yearBadge.classList.remove('visible');
+});
 item.addEventListener('pointermove', () => clearTimeout(longPressTimer));
    
   return item;
