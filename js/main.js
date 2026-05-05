@@ -262,16 +262,16 @@ item.addEventListener('mouseleave', () => {
 
 // Long press (mobile, all view only)
 let longPressTimer = null;
-item.addEventListener('touchstart', () => {
+item.addEventListener('pointerdown', () => {
   longPressTimer = setTimeout(() => {
     if (currentYear === 'all') {
       yearBadge.classList.add('visible');
       setTimeout(() => yearBadge.classList.remove('visible'), 1500);
     }
   }, 500);
-}, { passive: true });
-item.addEventListener('touchend', () => clearTimeout(longPressTimer));
-item.addEventListener('touchmove', () => clearTimeout(longPressTimer));
+});
+item.addEventListener('pointerup', () => clearTimeout(longPressTimer));
+item.addEventListener('pointermove', () => clearTimeout(longPressTimer));
    
   return item;
 }
