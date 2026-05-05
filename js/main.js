@@ -6,7 +6,7 @@
 const FIREBASE_URL = 'https://ilu-site-default-rtdb.firebaseio.com';
 const USE_FIREBASE = FIREBASE_URL !== 'YOUR_FIREBASE_URL_HERE';
 
-const YEARS = ['2026', '2025', '2024', '2023', '2022'];
+const YEARS = ['2026', '2025', '2024', '2023', '2022', '2021'];
 const ALL_PHOTOS = 'all';
 
 let photoManifest = {};
