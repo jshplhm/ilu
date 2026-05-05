@@ -254,7 +254,7 @@ function makeItem(filename, year, container) {
 
    // Show year badge on hover (desktop, all view only)
 item.addEventListener('mouseenter', () => {
-  if (currentYear === 'all') yearBadge.classList.add('visible');
+  if (currentYear  === 'all' && !hiddenMode) yearBadge.classList.add('visible');
 });
 item.addEventListener('mouseleave', () => {
   yearBadge.classList.remove('visible');
@@ -264,7 +264,7 @@ item.addEventListener('mouseleave', () => {
 let longPressTimer = null;
 item.addEventListener('pointerdown', () => {
   longPressTimer = setTimeout(() => {
-    if (currentYear === 'all') {
+    if (currentYear === 'all' && !hiddenMode) {
       yearBadge.classList.add('visible');
       setTimeout(() => yearBadge.classList.remove('visible'), 1500);
     }
