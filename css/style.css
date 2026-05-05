@@ -228,6 +228,29 @@ header.hidden {
 
 .heart-badge-icon { font-size: 0.75rem; color: #ff4d6d; }
 
+.year-badge {
+  position: absolute;
+  bottom: 7px;
+  left: 7px;
+  background: rgba(0,0,0,0.38);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: 20px;
+  padding: 4px 8px;
+  color: #fff;
+  font-family: var(--font);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.year-badge.visible {
+  opacity: 1;
+}
+
 .hidden-message {
   text-align: center;
   font-size: clamp(1.4rem, 3.5vw, 2.4rem);
