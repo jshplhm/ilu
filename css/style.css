@@ -227,17 +227,17 @@ header.hidden {
 }
 
 .heart-badge-icon { font-size: 0.75rem; color: #ff4d6d; }
-
+   
 .year-badge {
   position: absolute;
   top: 7px;
   left: 7px;
-  background: rgba(0,0,0,0.38);
+  background: rgba(0,0,0,0.06);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   border-radius: 20px;
   padding: 4px 8px;
-  color: #fff;
+  color: rgba(0,0,0,0.55);
   font-family: var(--font);
   font-size: 0.68rem;
   font-weight: 700;
