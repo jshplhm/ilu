@@ -237,7 +237,7 @@ header.hidden {
   -webkit-backdrop-filter: blur(6px);
   border-radius: 20px;
   padding: 4px 8px;
-  color: rgba(0,0,0,0.55);
+  color: #fff;
   font-family: var(--font);
   font-size: 0.68rem;
   font-weight: 700;
