@@ -246,6 +246,33 @@ function makeItem(filename, year, container) {
 
   item.appendChild(img);
   item.appendChild(badge);
+
+  const yearBadge = document.createElement('div');
+   yearBadge.className = 'year-badge';
+   yearBadge.textContent = year;
+   item.appendChild(yearBadge);
+
+   // Show year badge on hover (desktop, all view only)
+item.addEventListener('mouseenter', () => {
+  if (currentYear === 'all') yearBadge.classList.add('visible');
+});
+item.addEventListener('mouseleave', () => {
+  yearBadge.classList.remove('visible');
+});
+
+// Long press (mobile, all view only)
+let longPressTimer = null;
+item.addEventListener('touchstart', () => {
+  longPressTimer = setTimeout(() => {
+    if (currentYear === 'all') {
+      yearBadge.classList.add('visible');
+      setTimeout(() => yearBadge.classList.remove('visible'), 1500);
+    }
+  }, 500);
+}, { passive: true });
+item.addEventListener('touchend', () => clearTimeout(longPressTimer));
+item.addEventListener('touchmove', () => clearTimeout(longPressTimer));
+   
   return item;
 }
 
