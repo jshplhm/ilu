@@ -265,7 +265,7 @@ item.addEventListener('touchstart', e => {
     longPressTimer = setTimeout(() => {
       yearBadge.classList.add('visible');
       touchHandled = true; // suppress heart on release
-    }, 600);
+    }, 500);
   }
 }, { passive: true });
 
@@ -286,7 +286,7 @@ item.addEventListener('touchend', e => {
 
   if (touchHandled) {
     // Long press already fired — auto-hide badge
-    setTimeout(() => yearBadge.classList.remove('visible'), 1500);
+    setTimeout(() => yearBadge.classList.remove('visible'), 500);
     return;
   }
 
