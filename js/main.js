@@ -263,9 +263,10 @@ item.addEventListener('touchstart', e => {
   // Show badge while finger is still down (all-photos view only)
   if (currentYear === 'all' && !hiddenMode) {
     longPressTimer = setTimeout(() => {
-      yearBadge.classList.add('visible');
-      touchHandled = true; // suppress heart on release
-    }, 500);
+  console.log('longpress timer:', filename);
+  yearBadge.classList.add('visible');
+  touchHandled = true;
+}, 500);
   }
 }, { passive: true });
 
@@ -316,10 +317,9 @@ item.addEventListener('touchcancel', () => {
   item.appendChild(yearBadge);
 
   item.addEventListener('mouseenter', () => {
+  console.log('mouseenter:', filename);
+  if (isSorting) return;
   if (currentYear === 'all' && !hiddenMode) yearBadge.classList.add('visible');
-});
-item.addEventListener('mouseleave', () => {
-  yearBadge.classList.remove('visible');
 });
 
   return item;
