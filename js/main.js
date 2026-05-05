@@ -267,9 +267,13 @@ item.addEventListener('pointerdown', () => {
     if (currentYear === 'all' && !hiddenMode) {
       yearBadge.classList.add('visible');
     }
-  }, 500);
+  }, 1000);
 });
 item.addEventListener('pointerup', () => {
+  clearTimeout(longPressTimer);
+  yearBadge.classList.remove('visible');
+});
+item.addEventListener('pointercancel', () => {
   clearTimeout(longPressTimer);
   yearBadge.classList.remove('visible');
 });
