@@ -212,6 +212,7 @@ function makeItem(filename, year, container) {
   if (count > 0) badge.classList.add('visible');
 
   item.addEventListener('click', () => {
+  if (longPressActivated) { longPressActivated = false; return; }   
     if (isAnimating) return;
 
     item.classList.remove('popping');
@@ -262,9 +263,13 @@ item.addEventListener('mouseleave', () => {
 
 // Long press (mobile, all view only)
 let longPressTimer = null;
+let longPressActivated = false;
+
 item.addEventListener('pointerdown', () => {
+  longPressActivated = false;
   longPressTimer = setTimeout(() => {
     if (currentYear === 'all' && !hiddenMode) {
+      longPressActivated = true;
       yearBadge.classList.add('visible');
     }
   }, 1000);
