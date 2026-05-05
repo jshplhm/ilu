@@ -263,7 +263,7 @@ item.addEventListener('touchstart', e => {
   // Show badge while finger is still down (all-photos view only)
   if (currentYear === 'all' && !hiddenMode) {
     longPressTimer = setTimeout(() => {
-  document.title = 'LP:' + filename;
+  console.log('longpress timer:', filename);
   yearBadge.classList.add('visible');
   touchHandled = true;
 }, 500);
