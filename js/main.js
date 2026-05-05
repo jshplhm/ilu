@@ -276,7 +276,9 @@ item.addEventListener('pointerdown', () => {
 });
 item.addEventListener('pointerup', () => {
   clearTimeout(longPressTimer);
-  yearBadge.classList.remove('visible');
+  if (longPressActivated) {
+    yearBadge.classList.remove('visible');
+  }
 });
 item.addEventListener('pointercancel', () => {
   clearTimeout(longPressTimer);
@@ -407,7 +409,10 @@ const changed = newOrder.some((f, i) => {
 
   const scrollY = window.scrollY;
 
-  container.innerHTML = '';
+  items.forEach(item => {
+  item.querySelector('.year-badge')?.classList.remove('visible');
+});
+container.innerHTML = '';
   const n    = numCols();
   const cols = createCols(n, container);
   newOrder.forEach(f => {
@@ -478,10 +483,25 @@ const changed = newOrder.some((f, i) => {
       }, { once: true });
     });
   }));
-
-   setTimeout(() => {
+setTimeout(() => {
   isAnimating = false;
   lastHearted = null;
+  const allCols = [...container.querySelectorAll('.gallery-col')];
+  if (allCols.length) {
+    const maxH = Math.max(...allCols.map(c => c.offsetHeight));
+    allCols.forEach(col => {
+      if (!col.querySelector('.gallery-placeholder')) {
+        const remaining = maxH - col.offsetHeight;
+        if (remaining > 0) {
+          const ph = document.createElement('div');
+          ph.className = 'gallery-placeholder';
+          ph.style.height = (remaining - 8) + 'px';
+          col.appendChild(ph);
+          setTimeout(() => ph.classList.add('visible'), 50);
+        }
+      }
+    });
+  }
 }, 1000);
 }
 
