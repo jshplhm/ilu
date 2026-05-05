@@ -230,7 +230,7 @@ header.hidden {
 
 .year-badge {
   position: absolute;
-  bottom: 7px;
+  top: 7px;
   left: 7px;
   background: rgba(0,0,0,0.38);
   backdrop-filter: blur(6px);
