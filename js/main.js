@@ -394,7 +394,22 @@ const changed = newOrder.some((f, i) => {
     movers.push(item);
   });
 
-  if (movers.length === 0) { isAnimating = false; return; }
+  if (movers.length === 0) {
+  isAnimating = false;
+  const allCols = [...container.querySelectorAll('.gallery-col')];
+  const maxH = Math.max(...allCols.map(c => c.offsetHeight));
+  allCols.forEach(col => {
+    const remaining = maxH - col.offsetHeight;
+    if (remaining > 0) {
+      const ph = document.createElement('div');
+      ph.className = 'gallery-placeholder';
+      ph.style.height = (remaining - 8) + 'px';
+      col.appendChild(ph);
+      setTimeout(() => ph.classList.add('visible'), 50);
+    }
+  });
+  return;
+}
 
   requestAnimationFrame(() => requestAnimationFrame(() => {
     let pending = movers.length;
