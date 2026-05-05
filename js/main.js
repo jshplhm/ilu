@@ -479,7 +479,7 @@ container.innerHTML = '';
 
   if (movers.length === 0) {
   isAnimating = false;
-  isSorting   = false;
+     setTimeout(() => { isSorting = false; }, 400);
   const allCols = [...container.querySelectorAll('.gallery-col')];
   const maxH = Math.max(...allCols.map(c => c.offsetHeight));
   allCols.forEach(col => {
@@ -507,7 +507,7 @@ container.innerHTML = '';
         pending--;
         if (pending === 0) {
         isAnimating = false;
-        isSorting   = false;
+           setTimeout(() => { isSorting = false; }, 400);
           lastHearted = null;
           const allCols = [...container.querySelectorAll('.gallery-col')];
           const maxH = Math.max(...allCols.map(c => c.offsetHeight));
@@ -527,7 +527,7 @@ container.innerHTML = '';
   }));
 setTimeout(() => {
   isAnimating = false;
-  isSorting   = false;
+   setTimeout(() => { isSorting = false; }, 400);
   lastHearted = null;
   const allCols = [...container.querySelectorAll('.gallery-col')];
   if (allCols.length) {
