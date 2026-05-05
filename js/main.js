@@ -19,6 +19,7 @@ let hiddenMode    = false;
 let buildGeneration = 0;
 let shuffleOrder = {};
 let allPhotosShuffleOrder = null;
+let isSorting   = false;
 
 const gallery = document.getElementById('gallery');
 
@@ -211,8 +212,8 @@ function makeItem(filename, year, container) {
   badge.innerHTML = `<span class="heart-badge-icon">♥</span><span class="badge-count">${count}</span>`;
   if (count > 0) badge.classList.add('visible');
 
-  item.addEventListener('click', () => {
-  
+  // ── Shared heart action ───────────────
+  function triggerHeart() {
     if (isAnimating) return;
 
     item.classList.remove('popping');
@@ -225,56 +226,78 @@ function makeItem(filename, year, container) {
     badge.classList.add('visible');
 
     if (year === 'xo') {
-     updateXoHearts();
-     lastHearted = filename;
-     clearTimeout(resortTimer);
-     resortTimer = setTimeout(() => flipResort(photoManifest['xo'], 'xo', document.querySelector('main .gallery')), 1000);
-   } else {
-     updateTotalHearts();
-     if (year === currentYear || currentYear === 'all') {
-  lastHearted = filename;
-  clearTimeout(resortTimer);
-  resortTimer = setTimeout(() => {
-    if (currentYear === 'all') {
-      flipResort(getAllPhotos(), 'all', gallery);
+      updateXoHearts();
+      lastHearted = filename;
+      clearTimeout(resortTimer);
+      resortTimer = setTimeout(() => flipResort(photoManifest['xo'], 'xo', document.querySelector('main .gallery')), 1000);
     } else {
-      flipResort(currentPhotos, currentYear, gallery);
+      updateTotalHearts();
+      if (year === currentYear || currentYear === 'all') {
+        lastHearted = filename;
+        clearTimeout(resortTimer);
+        resortTimer = setTimeout(() => {
+          if (currentYear === 'all') {
+            flipResort(getAllPhotos(), 'all', gallery);
+          } else {
+            flipResort(currentPhotos, currentYear, gallery);
+          }
+        }, 1000);
+      }
     }
-  }, 1000);
-}
-   }
+  }
+
+  // ── Touch handling ────────────────────
+  // touchend is non-passive so we can call preventDefault() on short taps.
+  // This bypasses mobile's scroll-gesture disambiguation (which suppresses
+  // synthesized clicks during heavy reflow) and stops synthetic mouseenter
+  // from firing after every tap.
+  let touchStartTime = 0;
+  let touchHandled   = false;
+
+  item.addEventListener('touchstart', e => {
+    touchStartTime = e.timeStamp;
+    touchHandled   = false;
+  }, { passive: true });
+
+  item.addEventListener('touchend', e => {
+    const duration = e.timeStamp - touchStartTime;
+    if (duration >= 600 && currentYear === 'all' && !hiddenMode) {
+      // Deliberate long press — show year badge briefly
+      yearBadge.classList.add('visible');
+      setTimeout(() => yearBadge.classList.remove('visible'), 1500);
+      touchHandled = true;
+    } else if (duration < 600) {
+      // Short tap — fire heart directly; suppress synthetic mouse events
+      e.preventDefault();
+      touchHandled = true;
+      triggerHeart();
+    }
+  }, { passive: false });
+
+  // ── Click (desktop only) ──────────────
+  item.addEventListener('click', () => {
+    if (touchHandled) { touchHandled = false; return; }
+    triggerHeart();
   });
 
   item.appendChild(img);
   item.appendChild(badge);
 
   const yearBadge = document.createElement('div');
-   yearBadge.className = 'year-badge';
-   yearBadge.textContent = year;
-   item.appendChild(yearBadge);
+  yearBadge.className = 'year-badge';
+  yearBadge.textContent = year;
+  item.appendChild(yearBadge);
 
-   // Show year badge on hover (desktop, all view only)
-item.addEventListener('mouseenter', () => {
-  if (currentYear  === 'all' && !hiddenMode) yearBadge.classList.add('visible');
-});
-item.addEventListener('mouseleave', () => {
-  yearBadge.classList.remove('visible');
-});
+  // Hover (desktop pointer devices). Guarded by isSorting so DOM
+  // re-appending during flipResort can't trigger a spurious badge.
+  item.addEventListener('mouseenter', () => {
+    if (isSorting) return;
+    if (currentYear === 'all' && !hiddenMode) yearBadge.classList.add('visible');
+  });
+  item.addEventListener('mouseleave', () => {
+    yearBadge.classList.remove('visible');
+  });
 
-// Long press (mobile, all view only)
-let touchStartTime = 0;
-item.addEventListener('touchstart', (e) => {
-  touchStartTime = e.timeStamp;
-}, { passive: true });
-
-item.addEventListener('touchend', (e) => {
-  const duration = e.timeStamp - touchStartTime;
-  if (duration > 600 && currentYear === 'all' && !hiddenMode) {
-    yearBadge.classList.add('visible');
-    setTimeout(() => yearBadge.classList.remove('visible'), 1500);
-  }
-}, { passive: true });
-   
   return item;
 }
 
@@ -389,6 +412,7 @@ const changed = newOrder.some((f, i) => {
   if (!changed) return;
 
   isAnimating = true;
+  isSorting   = true;
   if (year !== 'xo') currentPhotos = newOrder;
 
   const firstRects = new Map();
@@ -431,6 +455,7 @@ container.innerHTML = '';
 
   if (movers.length === 0) {
   isAnimating = false;
+  isSorting   = false;
   const allCols = [...container.querySelectorAll('.gallery-col')];
   const maxH = Math.max(...allCols.map(c => c.offsetHeight));
   allCols.forEach(col => {
@@ -457,7 +482,8 @@ container.innerHTML = '';
         item.style.zIndex     = '';
         pending--;
         if (pending === 0) {
-          isAnimating = false;
+        isAnimating = false;
+        isSorting   = false;
           lastHearted = null;
           const allCols = [...container.querySelectorAll('.gallery-col')];
           const maxH = Math.max(...allCols.map(c => c.offsetHeight));
@@ -477,6 +503,7 @@ container.innerHTML = '';
   }));
 setTimeout(() => {
   isAnimating = false;
+  isSorting   = false;
   lastHearted = null;
   const allCols = [...container.querySelectorAll('.gallery-col')];
   if (allCols.length) {
