@@ -200,7 +200,7 @@ header.hidden {
 ───────────────────────────────────────── */
 .heart-badge {
   position: absolute;
-  top: 7px;
+  bottom: 7px;
   right: 7px;
   display: flex;
   align-items: center;
