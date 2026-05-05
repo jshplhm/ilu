@@ -212,7 +212,7 @@ function makeItem(filename, year, container) {
   if (count > 0) badge.classList.add('visible');
 
   item.addEventListener('click', () => {
-  if (longPressActivated) { longPressActivated = false; return; }   
+  
     if (isAnimating) return;
 
     item.classList.remove('popping');
