@@ -262,29 +262,18 @@ item.addEventListener('mouseleave', () => {
 });
 
 // Long press (mobile, all view only)
-let longPressTimer = null;
-let longPressActivated = false;
+let touchStartTime = 0;
+item.addEventListener('touchstart', (e) => {
+  touchStartTime = e.timeStamp;
+}, { passive: true });
 
-item.addEventListener('pointerdown', () => {
-  longPressActivated = false;
-  if (currentYear !== 'all' || hiddenMode) return;
-  longPressTimer = setTimeout(() => {
-    longPressActivated = true;
+item.addEventListener('touchend', (e) => {
+  const duration = e.timeStamp - touchStartTime;
+  if (duration > 600 && currentYear === 'all' && !hiddenMode) {
     yearBadge.classList.add('visible');
-  }, 500);
-});
-item.addEventListener('pointerup', () => {
-  clearTimeout(longPressTimer);
-  if (longPressActivated) {
-    yearBadge.classList.remove('visible');
+    setTimeout(() => yearBadge.classList.remove('visible'), 1500);
   }
-});
-item.addEventListener('pointercancel', () => {
-  clearTimeout(longPressTimer);
-  yearBadge.classList.remove('visible');
-  longPressActivated = false;
-});
-item.addEventListener('pointermove', () => clearTimeout(longPressTimer));
+}, { passive: true });
    
   return item;
 }
@@ -418,7 +407,10 @@ container.innerHTML = '';
   newOrder.forEach(f => {
   const fname = year === 'all' ? f.filename : f;
   const el = items.find(el => el.dataset.filename === fname);
-  if (el) shortestCol(cols).appendChild(el);
+  if (el) {
+    el.querySelector('.year-badge')?.classList.remove('visible');
+    shortestCol(cols).appendChild(el);
+  }
 });
 
   window.scrollTo({ top: scrollY, behavior: 'instant' });
