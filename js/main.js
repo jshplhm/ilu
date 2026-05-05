@@ -267,12 +267,11 @@ let longPressActivated = false;
 
 item.addEventListener('pointerdown', () => {
   longPressActivated = false;
+  if (currentYear !== 'all' || hiddenMode) return;
   longPressTimer = setTimeout(() => {
-    if (currentYear === 'all' && !hiddenMode) {
-      longPressActivated = true;
-      yearBadge.classList.add('visible');
-    }
-  }, 1000);
+    longPressActivated = true;
+    yearBadge.classList.add('visible');
+  }, 500);
 });
 item.addEventListener('pointerup', () => {
   clearTimeout(longPressTimer);
@@ -283,6 +282,7 @@ item.addEventListener('pointerup', () => {
 item.addEventListener('pointercancel', () => {
   clearTimeout(longPressTimer);
   yearBadge.classList.remove('visible');
+  longPressActivated = false;
 });
 item.addEventListener('pointermove', () => clearTimeout(longPressTimer));
    
