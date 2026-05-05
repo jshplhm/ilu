@@ -467,6 +467,11 @@ const changed = newOrder.some((f, i) => {
       }, { once: true });
     });
   }));
+
+   setTimeout(() => {
+  isAnimating = false;
+  lastHearted = null;
+}, 1000);
 }
 
 // ── Hidden page ────────────────────────
