@@ -245,34 +245,61 @@ function makeItem(filename, year, container) {
       }
     }
   }
+   
+// ── Touch handling ────────────────────
+let touchStartTime = 0;
+let touchStartX    = 0;
+let touchStartY    = 0;
+let touchHandled   = false;
+let longPressTimer = null;
 
-  // ── Touch handling ────────────────────
-  // touchend is non-passive so we can call preventDefault() on short taps.
-  // This bypasses mobile's scroll-gesture disambiguation (which suppresses
-  // synthesized clicks during heavy reflow) and stops synthetic mouseenter
-  // from firing after every tap.
-  let touchStartTime = 0;
-  let touchHandled   = false;
+item.addEventListener('touchstart', e => {
+  const t     = e.touches[0];
+  touchStartTime = e.timeStamp;
+  touchStartX    = t.clientX;
+  touchStartY    = t.clientY;
+  touchHandled   = false;
 
-  item.addEventListener('touchstart', e => {
-    touchStartTime = e.timeStamp;
-    touchHandled   = false;
-  }, { passive: true });
-
-  item.addEventListener('touchend', e => {
-    const duration = e.timeStamp - touchStartTime;
-    if (duration >= 600 && currentYear === 'all' && !hiddenMode) {
-      // Deliberate long press — show year badge briefly
+  // Show badge while finger is still down (all-photos view only)
+  if (currentYear === 'all' && !hiddenMode) {
+    longPressTimer = setTimeout(() => {
       yearBadge.classList.add('visible');
-      setTimeout(() => yearBadge.classList.remove('visible'), 1500);
-      touchHandled = true;
-    } else if (duration < 600) {
-      // Short tap — fire heart directly; suppress synthetic mouse events
-      e.preventDefault();
-      touchHandled = true;
-      triggerHeart();
-    }
-  }, { passive: false });
+      touchHandled = true; // suppress heart on release
+    }, 600);
+  }
+}, { passive: true });
+
+item.addEventListener('touchend', e => {
+  clearTimeout(longPressTimer);
+
+  const t     = e.changedTouches[0];
+  const moved = Math.sqrt(
+    Math.pow(t.clientX - touchStartX, 2) +
+    Math.pow(t.clientY - touchStartY, 2)
+  );
+
+  if (moved > 10) {
+    // Finger drifted — was a scroll, not a tap
+    yearBadge.classList.remove('visible');
+    return;
+  }
+
+  if (touchHandled) {
+    // Long press already fired — auto-hide badge
+    setTimeout(() => yearBadge.classList.remove('visible'), 1500);
+    return;
+  }
+
+  // Clean short tap — heart directly, suppress synthetic mouse events
+  e.preventDefault();
+  touchHandled = true;
+  triggerHeart();
+}, { passive: false });
+
+item.addEventListener('touchcancel', () => {
+  clearTimeout(longPressTimer);
+  yearBadge.classList.remove('visible');
+});
 
   // ── Click (desktop only) ──────────────
   item.addEventListener('click', () => {
