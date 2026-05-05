@@ -286,7 +286,7 @@ item.addEventListener('touchend', e => {
 
   if (touchHandled) {
     // Long press already fired — auto-hide badge
-    setTimeout(() => yearBadge.classList.remove('visible'), 500);
+    setTimeout(() => yearBadge.classList.remove('visible'), 200);
     return;
   }
 
