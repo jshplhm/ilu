@@ -22,7 +22,6 @@ let allPhotosShuffleOrder = null;
 let isSorting   = false;
 let lastTouchTime = 0;
 document.addEventListener('touchstart', () => { lastTouchTime = Date.now(); }, { passive: true });
-
 const gallery = document.getElementById('gallery');
 
 // ── Column count — 4 / 3 / 2 ──────────
@@ -320,11 +319,13 @@ item.addEventListener('touchcancel', () => {
 
  // mouseenter in makeItem
 item.addEventListener('mouseenter', () => {
-  if (Date.now() - lastTouchTime < 2000000) return;
-  if (currentYear === 'all' && !hiddenMode) {
-    console.log('mouseenter:', filename);
-    yearBadge.classList.add('visible');
-  }
+  const diff = Date.now() - lastTouchTime;
+  if (diff < 100000) return;
+  console.log('mouseenter PASSED, diff:', diff);
+  if (currentYear === 'all' && !hiddenMode) yearBadge.classList.add('visible');
+});
+item.addEventListener('mouseleave', () => {
+  yearBadge.classList.remove('visible');
 });
 
   return item;
