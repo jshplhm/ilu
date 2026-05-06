@@ -19,6 +19,7 @@ let hiddenMode    = false;
 let buildGeneration = 0;
 let shuffleOrder = {};
 let allPhotosShuffleOrder = null;
+let photoDimensions = {};
 let isSorting   = false;
 let lastTouchTime = 0;
 document.addEventListener('touchstart', () => { lastTouchTime = Date.now(); }, { passive: true });
@@ -171,7 +172,18 @@ function updateXoHearts() {
 async function loadManifest() {
   try {
     const res = await fetch('photos.json');
-    photoManifest = await res.json();
+    const raw = await res.json();
+    photoDimensions = {};
+    photoManifest = {};
+    Object.keys(raw).forEach(year => {
+      photoManifest[year] = (raw[year] || []).map(p => {
+        if (typeof p === 'object' && p.filename) {
+          photoDimensions[`${year}/${p.filename}`] = { w: p.w, h: p.h };
+          return p.filename;
+        }
+        return p;
+      });
+    });
   } catch(e) { photoManifest = {}; }
 }
 
@@ -199,6 +211,7 @@ function makeItem(filename, year, container) {
   const item = document.createElement('div');
   item.className = 'gallery-item';
   item.dataset.filename = filename;
+  item.dataset.year = year;
 
   const img = document.createElement('img');
   img.src      = `photos/${year}/${filename}`;
@@ -376,7 +389,8 @@ function buildGallery(photos, year, container) {
 
     cols[idx].appendChild(item);
     const colW = cols[idx].offsetWidth;
-    const ar   = img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1.33;
+    const dims = photoDimensions[`${item.dataset.year}/${item.dataset.filename}`];
+    const ar = dims ? dims.h / dims.w : (img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1.33);
     colHeights[idx] += colW * ar + 8;
 
     setTimeout(() => {
