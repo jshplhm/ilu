@@ -60,6 +60,7 @@ async function firebaseLoadAll() {
         });
         localSet(year, decoded);
       });
+   if (!data['xo']) localSet('xo', {});
     } else {
       YEARS.forEach(y => localSet(y, {}));
       localSet('xo', {});
