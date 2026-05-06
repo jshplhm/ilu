@@ -305,8 +305,9 @@ item.addEventListener('touchend', e => {
   }
 
   if (e.timeStamp - touchStartTime >= 500) {
-    return; // long hold — no heart
-  }
+  console.log('long press blocked, duration:', e.timeStamp - touchStartTime);
+  return;
+}
    
   // Clean short tap — heart directly, suppress synthetic mouse events
   e.preventDefault();
