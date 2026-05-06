@@ -304,6 +304,10 @@ item.addEventListener('touchend', e => {
     return;
   }
 
+  if (e.timeStamp - touchStartTime >= 500) {
+    return; // long hold — no heart
+  }
+   
   // Clean short tap — heart directly, suppress synthetic mouse events
   e.preventDefault();
   touchHandled = true;
