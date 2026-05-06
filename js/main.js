@@ -305,7 +305,7 @@ item.addEventListener('touchend', e => {
   }
 
   if (e.timeStamp - touchStartTime >= 500) {
-  console.log('long press blocked, duration:', e.timeStamp - touchStartTime);
+  touchHandled = true;
   return;
 }
    
