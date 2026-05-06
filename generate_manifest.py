@@ -14,6 +14,6 @@ for year in ['2021','2022','2023','2024','2025','2026','xo']:
                 manifest[year].append({'filename': f, 'w': w, 'h': h})
 
 with open('photos.json', 'w') as out:
-    json.dump(manifest, out)
+    json.dump(manifest, out, indent=2)
 
 print('Done')
