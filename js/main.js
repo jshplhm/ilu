@@ -20,6 +20,8 @@ let buildGeneration = 0;
 let shuffleOrder = {};
 let allPhotosShuffleOrder = null;
 let isSorting   = false;
+let lastTouchEndTime = 0;
+document.addEventListener('touchend', () => { lastTouchEndTime = Date.now(); }, { passive: true });
 
 const gallery = document.getElementById('gallery');
 
@@ -316,10 +318,12 @@ item.addEventListener('touchcancel', () => {
   yearBadge.textContent = year;
   item.appendChild(yearBadge);
 
-  item.addEventListener('mouseenter', () => {
-  console.log('mouseenter:', filename);
-  if (isSorting) return;
-  if (currentYear === 'all' && !hiddenMode) yearBadge.classList.add('visible');
+ item.addEventListener('mouseenter', () => {
+  if (Date.now() - lastTouchEndTime < 2000) return;
+  if (currentYear === 'all' && !hiddenMode) {
+    console.log('mouseenter:', filename);
+    yearBadge.classList.add('visible');
+  }
 });
 
   return item;
