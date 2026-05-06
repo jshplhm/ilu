@@ -361,15 +361,14 @@ function buildGallery(photos, year, container) {
 
   const n          = numCols();
   const cols       = createCols(n, container);
-  const colHeights = new Array(n).fill(0);
 
   function shortestColIdx() {
-    let idx = 0;
-    for (let i = 1; i < n; i++) {
-      if (colHeights[i] < colHeights[idx]) idx = i;
-    }
-    return idx;
+  let idx = 0;
+  for (let i = 1; i < n; i++) {
+    if (cols[i].offsetHeight < cols[idx].offsetHeight) idx = i;
   }
+  return idx;
+}
 
   const items = isAll
   ? photos.map(p => makeItem(p.filename, p.year))
@@ -388,10 +387,6 @@ function buildGallery(photos, year, container) {
     const delay = Math.max(0, lastPlaced + STAGGER - Date.now());
 
     cols[idx].appendChild(item);
-    const colW = cols[idx].offsetWidth;
-    const dims = photoDimensions[`${item.dataset.year}/${item.dataset.filename}`];
-    const ar = dims ? dims.h / dims.w : (img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1.33);
-    colHeights[idx] += colW * ar + 8;
 
     setTimeout(() => {
       if (buildGeneration !== myGen) return;
