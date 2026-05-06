@@ -320,7 +320,7 @@ item.addEventListener('touchcancel', () => {
 
  // mouseenter in makeItem
 item.addEventListener('mouseenter', () => {
-  if (Date.now() - lastTouchTime < 2000) return;
+  if (Date.now() - lastTouchTime < 2000000) return;
   if (currentYear === 'all' && !hiddenMode) {
     console.log('mouseenter:', filename);
     yearBadge.classList.add('visible');
