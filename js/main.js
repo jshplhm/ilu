@@ -277,7 +277,6 @@ item.addEventListener('touchstart', e => {
   // Show badge while finger is still down (all-photos view only)
   if (currentYear === 'all' && !hiddenMode) {
     longPressTimer = setTimeout(() => {
-  console.log('longpress timer:', filename);
   yearBadge.classList.add('visible');
   touchHandled = true;
 }, 500);
@@ -332,9 +331,7 @@ item.addEventListener('touchcancel', () => {
 
  // mouseenter in makeItem
 item.addEventListener('mouseenter', () => {
-  const diff = Date.now() - lastTouchTime;
-  if (diff < 100000) return;
-  console.log('mouseenter PASSED, diff:', diff);
+  if (Date.now() - lastTouchTime < 100000) return;
   if (currentYear === 'all' && !hiddenMode) yearBadge.classList.add('visible');
 });
 item.addEventListener('mouseleave', () => {
