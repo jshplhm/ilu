@@ -229,37 +229,21 @@ function makeItem(filename, year, container) {
 
   // ── Shared heart action ───────────────
   function triggerHeart() {
-    if (isAnimating) return;
+  item.classList.remove('popping');
+  void item.offsetWidth;
+  item.classList.add('popping');
+  item.addEventListener('animationend', () => item.classList.remove('popping'), { once: true });
 
-    item.classList.remove('popping');
-    void item.offsetWidth;
-    item.classList.add('popping');
-    item.addEventListener('animationend', () => item.classList.remove('popping'), { once: true });
+  const newCount = addHeart(year, filename);
+  badge.querySelector('.badge-count').textContent = newCount;
+  badge.classList.add('visible');
 
-    const newCount = addHeart(year, filename);
-    badge.querySelector('.badge-count').textContent = newCount;
-    badge.classList.add('visible');
-
-    if (year === 'xo') {
-      updateXoHearts();
-      lastHearted = filename;
-      clearTimeout(resortTimer);
-      resortTimer = setTimeout(() => flipResort(photoManifest['xo'], 'xo', document.querySelector('main .gallery')), 1000);
-    } else {
-      updateTotalHearts();
-      if (year === currentYear || currentYear === 'all') {
-        lastHearted = filename;
-        clearTimeout(resortTimer);
-        resortTimer = setTimeout(() => {
-          if (currentYear === 'all') {
-            flipResort(getAllPhotos(), 'all', gallery);
-          } else {
-            flipResort(currentPhotos, currentYear, gallery);
-          }
-        }, 1000);
-      }
-    }
+  if (year === 'xo') {
+    updateXoHearts();
+  } else {
+    updateTotalHearts();
   }
+}
    
 // ── Touch handling ────────────────────
 let touchStartTime = 0;
