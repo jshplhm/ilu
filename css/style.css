@@ -261,7 +261,8 @@ header img {
   nav { padding: 16px 20px; gap: 16px; flex-wrap: wrap; }
   .year-nav { gap: 14px; }
   .year-nav a { font-size: 0.9rem; }
-  header { padding: 36px 20px 52px; }
+  header { padding: 4px 16px 24px; }
+  header img { width: 88%; }
   .hidden-message { padding: 36px 20px 52px; }
   /* 2 columns on mobile */
   .gallery { --cols: 2; }
